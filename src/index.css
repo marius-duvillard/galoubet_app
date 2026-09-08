@@ -16,10 +16,21 @@
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial,
     sans-serif;
+
+  /* Extensions UI */
+  --ok-strong: #1f5c41;
+  --warn-strong: #8a5200;
+  --radius-sm: 10px;
+  --ease: cubic-bezier(0.3, 0.6, 0.3, 1);
+  --shadow-card: 0 1px 3px rgba(34, 30, 51, 0.06);
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
 }
 
 body {
@@ -27,6 +38,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--sans);
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -38,18 +50,344 @@ body {
   min-height: 100dvh;
 }
 
+/* ── En-tête ── */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: calc(4px + env(safe-area-inset-top));
+}
+
+.app-header__mark {
+  flex: none;
+  display: inline-flex;
+  color: var(--accent);
+}
+
 .app-header h1 {
   font-family: var(--serif);
-  font-size: 28px;
-  margin: 8px 0 2px;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+  margin: 0;
+  letter-spacing: 0.01em;
 }
 
 .app-header p {
-  margin: 0;
+  margin: 3px 0 0;
   color: var(--ink-soft);
   font-size: 14px;
 }
 
-.placeholder {
+/* ── Onglets (pilule) ── */
+
+.tabs {
+  position: sticky;
+  top: calc(10px + env(safe-area-inset-top));
+  z-index: 10;
+  display: flex;
+  gap: 4px;
+  margin: 18px 0 20px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: var(--shadow-card);
+}
+
+.tab {
+  flex: 1 1 0;
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
   color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 130ms var(--ease),
+    color 130ms var(--ease);
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tab--active {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tab--active:focus-visible {
+  outline-color: var(--ink);
+}
+
+/* ── Sections ── */
+
+.field {
+  margin-bottom: 22px;
+}
+
+.field__title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* ── Puces de sélection ── */
+
+.chips {
+  display: grid;
+  gap: 8px;
+}
+
+.chips--keys {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.chips--flutes {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.chips--flutes .chip {
+  font-size: 15px;
+}
+
+.chip {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.15;
+  padding: 8px 4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 130ms var(--ease),
+    border-color 130ms var(--ease),
+    color 130ms var(--ease),
+    transform 130ms var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--accent);
+}
+
+.chip:active {
+  transform: scale(0.97);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.chip--selected,
+.chip--selected:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+/* ── Carte de résultat ── */
+
+.result {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 18px 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.result__staff {
+  position: absolute;
+  top: 44px;
+  left: 18px;
+  right: 18px;
+  height: 25px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(34, 30, 51, 0.07) 0 1px,
+    transparent 1px 6px
+  );
+  pointer-events: none;
+}
+
+.result__overline {
+  position: relative;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.result__tonality {
+  position: relative;
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: 0.005em;
+  overflow-wrap: anywhere;
+}
+
+.result__keyline {
+  position: relative;
+  margin: -4px 0 10px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.result__badge {
+  position: relative;
+}
+
+.result__note {
+  position: relative;
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.result--fallback {
+  border-color: rgba(192, 52, 52, 0.35);
+}
+
+.result--fallback .result__overline {
+  color: var(--danger);
+}
+
+/* ── Badge de confort ── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 3px 10px 3px 9px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.badge::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge--ok {
+  background: var(--ok-soft);
+  color: var(--ok-strong);
+}
+
+.badge--warn {
+  background: var(--warn-soft);
+  color: var(--warn-strong);
+}
+
+.badge--danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.badge--sm {
+  min-height: 22px;
+  padding: 2px 9px 2px 8px;
+  font-size: 12px;
+}
+
+.badge--sm::before {
+  width: 5px;
+  height: 5px;
+}
+
+/* ── Options secondaires (F2) ── */
+
+.options {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+}
+
+.option__main {
+  min-width: 0;
+}
+
+.option__flute {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.option__key {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+/* ── Alerte (aucune configuration en plage) ── */
+
+.notice {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  background: var(--danger-soft);
+  border: 1px solid rgba(192, 52, 52, 0.3);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* ── Mouvement réduit ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .chip,
+  .tab {
+    transition: none;
+  }
+
+  .chip:active {
+    transform: none;
+  }
 }
