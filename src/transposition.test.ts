@@ -248,7 +248,7 @@ describe("H) tables", () => {
 describe("I) CHIP_KEYS", () => {
   it("names in pc order", () => {
     expect(CHIP_KEYS.map((k) => k.name)).toEqual([
-      "Do", "Do♯", "Ré", "Ré♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si",
+      "Do", "Do♯", "Ré", "Mi♭", "Mi", "Fa", "Fa♯", "Sol", "La♭", "La", "Si♭", "Si",
     ]);
   });
   it("pcs 0..11 in order", () => {

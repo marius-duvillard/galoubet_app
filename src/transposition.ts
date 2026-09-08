@@ -31,14 +31,14 @@ export const CHIP_KEYS: readonly { pc: number; name: string }[] = [
   { pc: 0, name: "Do" },
   { pc: 1, name: "Do♯" },
   { pc: 2, name: "Ré" },
-  { pc: 3, name: "Ré♯" },
+  { pc: 3, name: "Mi♭" },
   { pc: 4, name: "Mi" },
   { pc: 5, name: "Fa" },
   { pc: 6, name: "Fa♯" },
   { pc: 7, name: "Sol" },
-  { pc: 8, name: "Sol♯" },
+  { pc: 8, name: "La♭" },
   { pc: 9, name: "La" },
-  { pc: 10, name: "La♯" },
+  { pc: 10, name: "Si♭" },
   { pc: 11, name: "Si" },
 ];
 
