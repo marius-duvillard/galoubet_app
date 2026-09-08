@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .qa/
+.omo/
 *.local
 .DS_Store
 npm-debug.log*
