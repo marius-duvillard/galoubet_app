@@ -21,25 +21,26 @@ const INDEX_HTML = [
 
 function buildHarness(indexHtml: string): { harness: Harness; ctx: vm.Context } {
   const harness: Harness = { listeners: {}, cache: new Map(), fetchLog: [] };
+  const mockFetch = (input: RequestInfo | URL) => {
+    const u = String(input);
+    harness.fetchLog.push(u);
+    if (u === "/index.html" || u === "/") {
+      return Promise.resolve(new Response(indexHtml, { status: 200 }));
+    }
+    return Promise.resolve(new Response("body:" + u, { status: 200 }));
+  };
   const sandbox: Record<string, unknown> = {
     console,
     URL,
     Response,
-    fetch: (input: RequestInfo | URL) => {
-      const u = String(input);
-      harness.fetchLog.push(u);
-      if (u === "/index.html" || u === "/") {
-        return Promise.resolve(new Response(indexHtml, { status: 200 }));
-      }
-      return Promise.resolve(new Response("body:" + u, { status: 200 }));
-    },
+    fetch: mockFetch,
     caches: {
       open: (_name: string) =>
         Promise.resolve({
           addAll: (urls: string[]) =>
             Promise.all(
               urls.map((u) =>
-                sandbox.fetch(u).then(() => {
+                mockFetch(u).then(() => {
                   harness.cache.set(u, "ok");
                 }),
               ),
@@ -82,7 +83,7 @@ function fireInstall(harness: Harness): Promise<void> {
         settled = p;
       },
     });
-    void settled.then(done, done);
+    void settled.then(() => done(), () => done());
   });
 }
 
