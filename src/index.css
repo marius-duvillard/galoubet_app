@@ -46,8 +46,10 @@ body {
 .app {
   max-width: 520px;
   margin: 0 auto;
-  padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  padding: 16px;
   min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── En-tête ── */
@@ -377,6 +379,17 @@ body {
   font-size: 14px;
   font-weight: 600;
   line-height: 1.45;
+}
+
+/* ── Footer version ── */
+
+.app-footer {
+  margin-top: auto;
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+  text-align: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: #9a927f;
 }
 
 /* ── Mouvement réduit ── */

@@ -9,26 +9,46 @@ interface Harness {
   fetchLog: string[];
 }
 
-const INDEX_HTML = [
-  "<!doctype html><html lang=\"fr\"><head>",
-  '<meta charset="UTF-8" />',
-  '<link rel="manifest" href="/manifest.webmanifest">',
-  '<link rel="stylesheet" crossorigin href="/assets/index-DEF.css">',
-  "</head><body><div id=\"root\"></div>",
-  '<script type="module" crossorigin src="/assets/index-ABC.js"></script>',
-  "</body></html>",
-].join("");
+// Index.html tel que produit par `vite build` : les assets hashés portent
+// le préfixe --base, les fichiers public/ sont référencés en relatif.
+function indexHtml(assetBase: string): string {
+  return [
+    "<!doctype html><html lang=\"fr\"><head>",
+    '<meta charset="UTF-8" />',
+    '<link rel="manifest" href="manifest.webmanifest">',
+    `<link rel="stylesheet" crossorigin href="${assetBase}assets/index-DEF.css">`,
+    "</head><body><div id=\"root\"></div>",
+    `<script type="module" crossorigin src="${assetBase}assets/index-ABC.js"></script>`,
+    "</body></html>",
+  ].join("");
+}
 
-function buildHarness(indexHtml: string): { harness: Harness; ctx: vm.Context } {
+/**
+ * Le paramètre swHref est l'URL absolue du service worker, telle que vus
+ * par le navigateur :
+ * - http://localhost/sw.js            → app servie à la racine
+ * - https://x.com/galoubet_app/sw.js  → site GitHub Pages projet (/nom-repo/)
+ * Comme l'exige la spec Cache, les URLs relatives (addAll/fetch/match)
+ * sont résolues contre l'emplacement du worker.
+ */
+function buildHarness(
+  indexHtml: string,
+  swHref: string,
+): { harness: Harness; ctx: vm.Context } {
   const harness: Harness = { listeners: {}, cache: new Map(), fetchLog: [] };
+  const keyOf = (input: RequestInfo | URL) =>
+    new URL(String(input), swHref).toString();
+
   const mockFetch = (input: RequestInfo | URL) => {
-    const u = String(input);
-    harness.fetchLog.push(u);
-    if (u === "/index.html" || u === "/") {
+    harness.fetchLog.push(String(input));
+    const resolved = keyOf(input);
+    const pathname = new URL(resolved).pathname;
+    if (pathname === "/" || pathname.endsWith("index.html")) {
       return Promise.resolve(new Response(indexHtml, { status: 200 }));
     }
-    return Promise.resolve(new Response("body:" + u, { status: 200 }));
+    return Promise.resolve(new Response("body:" + resolved, { status: 200 }));
   };
+
   const sandbox: Record<string, unknown> = {
     console,
     URL,
@@ -41,17 +61,17 @@ function buildHarness(indexHtml: string): { harness: Harness; ctx: vm.Context } 
             Promise.all(
               urls.map((u) =>
                 mockFetch(u).then(() => {
-                  harness.cache.set(u, "ok");
+                  harness.cache.set(keyOf(u), "ok");
                 }),
               ),
             ),
           put: (u: string) =>
             Promise.resolve().then(() => {
-              harness.cache.set(u, "ok");
+              harness.cache.set(keyOf(u), "ok");
             }),
           match: (u: string) =>
             Promise.resolve(
-              harness.cache.has(u) ? new Response("cached") : undefined,
+              harness.cache.has(keyOf(u)) ? new Response("cached") : undefined,
             ),
         }),
       keys: () => Promise.resolve(["galoubet"]),
@@ -64,7 +84,7 @@ function buildHarness(indexHtml: string): { harness: Harness; ctx: vm.Context } 
     },
     skipWaiting: () => Promise.resolve(),
     clients: { claim: () => Promise.resolve() },
-    location: { origin: "http://localhost" },
+    location: { origin: new URL(swHref).origin, href: swHref },
   };
   const ctx = vm.createContext(sandbox);
   return { harness, ctx };
@@ -87,44 +107,60 @@ function fireInstall(harness: Harness): Promise<void> {
   });
 }
 
-describe("sw.js : installation", () => {
-  it("précache la liste statique", async () => {
-    const { harness, ctx } = buildHarness(INDEX_HTML);
+describe("sw.js : installation, app à la racine", () => {
+  const ROOT = "http://localhost/sw.js";
+
+  it("précache la liste statique + les assets hashés de index.html", async () => {
+    const { harness, ctx } = buildHarness(indexHtml("/"), ROOT);
     runSWSource(ctx);
     await fireInstall(harness);
     for (const expected of [
-      "/",
-      "/index.html",
-      "/manifest.webmanifest",
-      "/icons/icon-192.png",
-      "/icons/icon-512.png",
-      "/icons/icon-maskable-512.png",
-      "/apple-touch-icon.png",
+      "http://localhost/",
+      "http://localhost/index.html",
+      "http://localhost/manifest.webmanifest",
+      "http://localhost/icons/icon-192.png",
+      "http://localhost/icons/icon-512.png",
+      "http://localhost/icons/icon-maskable-512.png",
+      "http://localhost/apple-touch-icon.png",
+      "http://localhost/assets/index-ABC.js",
+      "http://localhost/assets/index-DEF.css",
     ]) {
       expect(harness.cache.has(expected), `cache doit contenir ${expected}`).toBe(true);
     }
   });
 
-  it("précache aussi les assets hashés référencés par index.html (offline dès la 1re visite)", async () => {
-    const { harness, ctx } = buildHarness(INDEX_HTML);
+  it("n'ajoute au cache que les assets .js/.css de index.html", async () => {
+    const { harness, ctx } = buildHarness(indexHtml("/"), ROOT);
     runSWSource(ctx);
     await fireInstall(harness);
-    expect(harness.cache.has("/assets/index-ABC.js")).toBe(true);
-    expect(harness.cache.has("/assets/index-DEF.css")).toBe(true);
-  });
-
-  it("n'ajoute au cache que les assets .js/.css (pas le manifest, pas les icônes)", async () => {
-    const { harness, ctx } = buildHarness(INDEX_HTML);
-    runSWSource(ctx);
-    await fireInstall(harness);
-    expect(harness.cache.has("/manifest.webmanifest")).toBe(true);
-    expect(harness.cache.has("/icons/icon-192.png")).toBe(true);
-    for (const absent of [
-      "/assets/autre.svg",
-      "/manifest.webmanifest.js",
-    ]) {
-      expect(harness.cache.has(absent)).toBe(false);
-    }
     expect(harness.fetchLog.filter((u) => u.endsWith(".svg"))).toEqual([]);
+  });
+});
+
+describe("sw.js : installation, app sous sous-chemin (GitHub Pages /nom-repo/)", () => {
+  const SUB = "https://example.com/galoubet_app/sw.js";
+  const P = "https://example.com/galoubet_app";
+
+  it("précache la liste statique et les assets sous le bon chemin", async () => {
+    const { harness, ctx } = buildHarness(indexHtml("/galoubet_app/"), SUB);
+    runSWSource(ctx);
+    await fireInstall(harness);
+    for (const expected of [
+      P + "/",
+      P + "/index.html",
+      P + "/manifest.webmanifest",
+      P + "/icons/icon-192.png",
+      P + "/icons/icon-512.png",
+      P + "/icons/icon-maskable-512.png",
+      P + "/apple-touch-icon.png",
+      P + "/assets/index-ABC.js",
+      P + "/assets/index-DEF.css",
+    ]) {
+      expect(harness.cache.has(expected), `cache doit contenir ${expected}`).toBe(true);
+    }
+    // Rien ne doit pointer hors du sous-chemin de l'app.
+    for (const [key] of harness.cache) {
+      expect(key.startsWith(P + "/"), `${key} est hors du scope de l'app`).toBe(true);
+    }
   });
 });

@@ -10,6 +10,9 @@ const TABS: readonly { id: Tab; label: string }[] = [
   { id: "f2", label: "Quelle flûte ?" },
 ];
 
+// Injectée par le pipeline GitHub Actions à chaque release (VITE_APP_VERSION).
+const VERSION: string = import.meta.env.VITE_APP_VERSION ?? "dev";
+
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState());
 
@@ -56,6 +59,8 @@ export default function App() {
           onRealPc={(realPc) => setState((s) => ({ ...s, f2: { realPc } }))}
         />
       )}
+
+      <footer className="app-footer">v{VERSION}</footer>
     </main>
   );
 }

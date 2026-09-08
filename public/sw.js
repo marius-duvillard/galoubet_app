@@ -1,13 +1,17 @@
-const CACHE = "galoubet-v3";
+const CACHE = "galoubet-v4";
 
+// Chemins RELATIFS à l'emplacement du worker : l'app fonctionne à la racine
+// (https://h/) comme sous un sous-chemin (https://h/galoubet_app/, ex. site
+// GitHub Pages « user.github.io/nom-repo »). L'API Cache résout les URLs
+// relatives contre l'URL du worker, comme l'exige la spec.
 const PRECACHE = [
-  "/",
-  "/index.html",
-  "/manifest.webmanifest",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/icon-maskable-512.png",
-  "/apple-touch-icon.png",
+  "./", // URL du répertoire (navigation directe) ; "" se résoudrait sur le worker lui-même
+  "index.html",
+  "manifest.webmanifest",
+  "icons/icon-192.png",
+  "icons/icon-512.png",
+  "icons/icon-maskable-512.png",
+  "apple-touch-icon.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -20,8 +24,10 @@ self.addEventListener("install", (event) => {
         // index.html pour que l'app soit 100 % offline dès la première visite
         // (le SW s'enregistre depuis le bundle : sans ça, JS/CSS ne seraient
         // jamais mis en cache avant un second chargement).
-        const response = await fetch("/index.html");
+        const response = await fetch("index.html");
         const html = await response.text();
+        // Vite émet des URLs absolues préfixées par --base (ex.
+        // /galoubet_app/assets/index-x.js) : on les cache telles quelles.
         const assets = [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
           .map((m) => m[1])
           .filter((u) => u.startsWith("/") && (u.endsWith(".js") || u.endsWith(".css")));
@@ -63,7 +69,7 @@ self.addEventListener("fetch", (event) => {
         .catch(() =>
           caches
             .match(request)
-            .then((cached) => cached || caches.match("/index.html")),
+            .then((cached) => cached || caches.match("index.html")),
         ),
     );
     return;

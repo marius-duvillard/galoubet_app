@@ -1,0 +1,76 @@
+name: GitHub Pages & Release
+
+# Déploiement sur GitHub Pages + création d'une release GitHub, déclenchés
+# par un tag v* (ex. v1.0.0) ou manuellement (bouton Actions).
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write # création de la release
+  pages: write # déploiement Pages
+  id-token: write # exigé par actions/deploy-pages
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Version et base
+        id: meta
+        run: |
+          case "${GITHUB_REF}" in
+            refs/tags/v*) VERSION="${GITHUB_REF_NAME#v}" ;;
+            *) VERSION="dev+${GITHUB_RUN_NUMBER}" ;;
+          esac
+          # Domaine custom (fichier CNAME) → racine ; sinon site projet
+          # « user.github.io/nom-repo » → base /nom-repo/.
+          if [ -f CNAME ]; then BASE="/"; else BASE="/${{ github.event.repository.name }}/"; fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "base=${BASE}" >> "$GITHUB_OUTPUT"
+          echo "Déploiement de la version ${VERSION} (base ${BASE})"
+
+      - name: Build
+        env:
+          VITE_APP_VERSION: ${{ steps.meta.outputs.version }}
+        run: npm run build -- --base=${{ steps.meta.outputs.base }}
+
+      - name: CNAME vers dist
+        run: cp CNAME dist/ 2>/dev/null || true
+
+      - name: Upload artifact Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Déploiement GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Compression dist.zip
+        run: cd dist && zip -qr ../dist.zip .
+
+      - name: Release GitHub
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Galoubet Transposition v${{ steps.meta.outputs.version }}"
+          files: dist.zip
+          generate_release_notes: true

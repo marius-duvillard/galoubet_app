@@ -63,7 +63,7 @@ npm install        # dépendances
 npm run dev        # serveur de développement (Vite)
 npm run build      # typecheck + build de production dans dist/
 npm run preview    # servir dist/ en local
-npm test           # 73 tests vitest du moteur
+npm test           # 77 tests vitest (moteur + service worker)
 npm run typecheck  # vérification TypeScript (tsc --noEmit)
 ```
 
@@ -79,6 +79,42 @@ npm run typecheck  # vérification TypeScript (tsc --noEmit)
    assets du build sont préchargés par le service worker à l'installation)
    (service worker).
 
+## Déployer sur GitHub Pages
+
+Le pipeline GitHub Actions est prêt (`.github/workflows/deploy.yml`) :
+chaque tag `v*` déclenche le build, le déploiement sur GitHub Pages et une
+release GitHub avec l'archive `dist.zip`. La version du tag s'affiche dans
+le footer de l'application.
+
+1. Créer un dépôt GitHub et y pousser le projet :
+
+   ```bash
+   git remote add origin git@github.com:TON_USER/galoubet_app.git
+   git push -u origin main
+   ```
+
+2. Sur GitHub : **Settings → Pages → Build and deployment → Source :
+   « GitHub Actions »** (une fois seulement).
+3. Créer le premier tag et le pousser :
+
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+4. L'app est en ligne sur `https://TON_USER.github.io/galoubet_app/` et
+   une release avec `dist.zip` apparaît dans l'onglet **Releases**.
+
+Le service worker est « base-agnostic » : il fonctionne aussi bien à la
+racine d'un domaine que sous le sous-chemin `user.github.io/nom-repo`.
+
+### Domaine custom (optionnel)
+
+Ajouter un fichier `CNAME` à la racine du dépôt contenant le domaine (ex.
+`galoubet.mon-domaine.fr`), pousser, puis créer un nouveau tag. Le build
+passe alors en base `/` et le CNAME est copié dans `dist/`. Côté DNS :
+`CNAME galoubet.mon-domaine.fr → TON_USER.github.io`.
+
 ## Régénérer les icônes
 
 Les PNG sont générés depuis les SVG sources avec rsvg-convert :
@@ -91,13 +127,15 @@ rsvg-convert -w 180 -h 180 public/icons/icon.svg -o public/apple-touch-icon.png
 ```
 
 Après toute modification, changer la constante `CACHE` dans `public/sw.js`
-(bump de version, par exemple `galoubet-v3`) pour forcer le rafraîchissement
+(bump de version, par exemple `galoubet-v5`) pour forcer le rafraîchissement
 du cache chez les utilisateurs installés.
 
 ## Architecture
 
 - `src/transposition.ts` : moteur de transposition pur, sans dépendance et
-  sans DOM. 100 % testé (73 tests vitest dans `src/transposition.test.ts`).
+  sans DOM. 100 % testé (tests dans `src/transposition.test.ts`).
+- `src/sw.test.ts` : tests du service worker (harness `node:vm` exécutant le
+  vrai `public/sw.js`), y compris le cas sous-chemin GitHub Pages.
 - `src/views/` (SonReel, QuelleFlute) et `src/components/` (grille de
   tonalités, puces de flûtes, badges de confort, cartes de résultat) :
   interface React 19.
@@ -106,7 +144,9 @@ du cache chez les utilisateurs installés.
   défaut.
 - `public/manifest.webmanifest` + `public/sw.js` : le service worker sert la
   navigation en network-first (nouvelle version dès que disponible, repli sur
-  le cache en hors-ligne) et les assets statiques en cache-first.
+  le cache en hors-ligne) et les assets statiques en cache-first. Tous les
+  chemins sont relatifs à l'emplacement du worker : l'app fonctionne à la
+  racine comme sous un sous-chemin (GitHub Pages).
 - Icônes : SVG sources (`public/icons/icon.svg`, `icon-maskable.svg`) et PNG
   générés (voir « Régénérer les icônes »).
 
