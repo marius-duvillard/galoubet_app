@@ -1,0 +1,55 @@
+:root {
+  --bg: #f7f3ea;
+  --surface: #ffffff;
+  --ink: #221e33;
+  --ink-soft: #6b6580;
+  --accent: #5b4fc7;
+  --accent-soft: #ece9fb;
+  --ok: #2e7d5b;
+  --ok-soft: #e3f1ea;
+  --warn: #c77700;
+  --warn-soft: #faf0dc;
+  --danger: #c03434;
+  --danger-soft: #f9e6e6;
+  --line: #e6e0d4;
+  --radius: 14px;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.app {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  min-height: 100dvh;
+}
+
+.app-header h1 {
+  font-family: var(--serif);
+  font-size: 28px;
+  margin: 8px 0 2px;
+}
+
+.app-header p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.placeholder {
+  color: var(--ink-soft);
+}
