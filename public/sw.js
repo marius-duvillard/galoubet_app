@@ -1,4 +1,4 @@
-const CACHE = "galoubet-v2";
+const CACHE = "galoubet-v3";
 
 const PRECACHE = [
   "/",
@@ -14,7 +14,19 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
+      .then(async (cache) => {
+        await cache.addAll(PRECACHE);
+        // Les assets hashés ne sont pas connus à l'avance : on les lit dans
+        // index.html pour que l'app soit 100 % offline dès la première visite
+        // (le SW s'enregistre depuis le bundle : sans ça, JS/CSS ne seraient
+        // jamais mis en cache avant un second chargement).
+        const response = await fetch("/index.html");
+        const html = await response.text();
+        const assets = [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
+          .map((m) => m[1])
+          .filter((u) => u.startsWith("/") && (u.endsWith(".js") || u.endsWith(".css")));
+        if (assets.length > 0) await cache.addAll(assets);
+      })
       .then(() => self.skipWaiting())
   );
 });

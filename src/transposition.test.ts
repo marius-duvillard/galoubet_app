@@ -54,11 +54,24 @@ describe("B) F1 realTone / writtenTone", () => {
     expect(realTone(10, "Sol")).toBe(5); // notée Si♭, flûte Sol → Fa
   });
 
+  // Garde de cohérence inverse (algébriquement trivial — l'oracle des
+  // intervalles est le test A + les deltas littéraux ci-dessous).
   it("writtenTone ∘ realTone = identity, every pc, every flute", () => {
     for (let pc = 0; pc < 12; pc++) {
       for (const f of FLUTES) {
         expect(writtenTone(realTone(pc, f), f)).toBe(pc);
       }
+    }
+  });
+
+  it("realTone applique le delta littéral de chaque flûte, tous pc", () => {
+    const mod12 = (x: number) => ((x % 12) + 12) % 12;
+    for (let pc = 0; pc < 12; pc++) {
+      expect(realTone(pc, "Si")).toBe(mod12(pc - 1));
+      expect(realTone(pc, "Si♭")).toBe(mod12(pc - 2));
+      expect(realTone(pc, "La")).toBe(mod12(pc - 3));
+      expect(realTone(pc, "Sol")).toBe(mod12(pc - 5));
+      expect(realTone(pc, "Ut")).toBe(pc);
     }
   });
 

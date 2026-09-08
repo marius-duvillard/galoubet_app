@@ -75,7 +75,8 @@ npm run typecheck  # vérification TypeScript (tsc --noEmit)
    - Android (Chrome) : menu → « Ajouter à l'écran d'accueil » ou
      « Installer l'application ».
    - iOS (Safari) : Partager → « Sur l'écran d'accueil ».
-3. Après la première visite, l'application fonctionne hors-ligne
+3. Dès la première visite, l'application fonctionne hors-ligne (les
+   assets du build sont préchargés par le service worker à l'installation)
    (service worker).
 
 ## Régénérer les icônes
