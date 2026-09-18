@@ -23,12 +23,12 @@ export function SonReel({ writtenPc, flute, onWrittenPc, onFlute }: SonReelProps
 
   return (
     <div className="view">
-      <FieldSection id="f1-written" title="Tonalité notée">
-        <KeyChipGrid ariaLabel="Tonalité notée" value={writtenPc} onChange={onWrittenPc} />
-      </FieldSection>
-
       <FieldSection id="f1-flute" title="Votre galoubet">
         <FluteChips value={flute} onChange={onFlute} />
+      </FieldSection>
+
+      <FieldSection id="f1-written" title="Tonalité notée">
+        <KeyChipGrid ariaLabel="Tonalité notée" value={writtenPc} onChange={onWrittenPc} />
       </FieldSection>
 
       <FieldSection id="f1-staff" title="Tonique sur la portée">
