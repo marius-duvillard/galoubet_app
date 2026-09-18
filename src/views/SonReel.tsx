@@ -5,6 +5,7 @@ import type { Flute } from "../transposition";
 import { FieldSection } from "../components/FieldSection";
 import { KeyChipGrid } from "../components/KeyChipGrid";
 import { FluteChips } from "../components/FluteChips";
+import { KeyStaff } from "../components/KeyStaff";
 import { ResultCard } from "../components/ResultCard";
 
 interface SonReelProps {
@@ -28,6 +29,10 @@ export function SonReel({ writtenPc, flute, onWrittenPc, onFlute }: SonReelProps
 
       <FieldSection id="f1-flute" title="Votre galoubet">
         <FluteChips value={flute} onChange={onFlute} />
+      </FieldSection>
+
+      <FieldSection id="f1-staff" title="Tonique sur la portée">
+        <KeyStaff writtenPc={writtenPc} flute={flute} onWrittenPc={onWrittenPc} />
       </FieldSection>
 
       <ResultCard
