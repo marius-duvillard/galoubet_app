@@ -183,3 +183,26 @@ export function bestConfigs(realPc: number): {
   };
   return { candidates, primary: null, fallback };
 }
+
+/** Armure condensée d'une tonalité : « ♮ », « 3♯ » ou « 2♭ ». */
+export function signatureLabel(pc: number): string {
+  const info = keyInfo(pc);
+  if (info.accidentalType === "none") {
+    return "♮";
+  }
+  const sign = info.accidentalType === "sharp" ? "♯" : "♭";
+  return `${info.accidentals}${sign}`;
+}
+
+const INTERVAL_LABEL: Record<Flute, string> = {
+  Ut: "à l'unisson",
+  Si: "une 2de mineure plus bas",
+  "Si♭": "une 2de majeure plus bas",
+  La: "une 3ce mineure plus bas",
+  Sol: "une 4te juste plus bas",
+};
+
+/** Intervalle notée → réelle décrit en français pour la flûte donnée. */
+export function intervalLabel(flute: Flute): string {
+  return INTERVAL_LABEL[flute];
+}
