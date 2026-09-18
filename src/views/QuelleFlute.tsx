@@ -180,7 +180,7 @@ function ComfortResults({ realPc }: { realPc: number }) {
           tonality={`Galoubet en ${fallback.flute}`}
           keyLine={`Noter en ${formatKey(fallback.writtenPc)}`}
           badgeLabel={fallback.label}
-          note="Demi-trous excessifs."
+          note={`Sonner ${intervalLabel(fallback.flute)}. Demi-trous excessifs.`}
           fallback
         />
       </>
