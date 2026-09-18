@@ -11,11 +11,13 @@ import { ResultCard } from "../components/ResultCard";
 interface SonReelProps {
   writtenPc: number;
   flute: Flute;
+  noteMidi: number;
   onWrittenPc: (pc: number) => void;
   onFlute: (flute: Flute) => void;
+  onNoteMidi: (midi: number) => void;
 }
 
-export function SonReel({ writtenPc, flute, onWrittenPc, onFlute }: SonReelProps) {
+export function SonReel({ writtenPc, flute, noteMidi, onWrittenPc, onFlute, onNoteMidi }: SonReelProps) {
   const realPc = realTone(writtenPc, flute);
   const realKey = formatKey(realPc);
   const writtenKey = formatKey(writtenPc);
@@ -31,8 +33,13 @@ export function SonReel({ writtenPc, flute, onWrittenPc, onFlute }: SonReelProps
         <KeyChipGrid ariaLabel="Tonalité notée" value={writtenPc} onChange={onWrittenPc} />
       </FieldSection>
 
-      <FieldSection id="f1-staff" title="Tonique sur la portée">
-        <KeyStaff writtenPc={writtenPc} flute={flute} onWrittenPc={onWrittenPc} />
+      <FieldSection id="f1-staff" title="Note écrite sur la portée">
+        <KeyStaff
+          writtenPc={writtenPc}
+          flute={flute}
+          writtenMidi={noteMidi}
+          onWrittenMidi={onNoteMidi}
+        />
       </FieldSection>
 
       <ResultCard

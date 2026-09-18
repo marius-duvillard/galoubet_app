@@ -2,7 +2,7 @@
 // Validation de schéma tolérante : toute valeur illisible retombe sur la
 // valeur par défaut. parseState est pure (texte → état), sans localStorage.
 
-import { RANGE_MAX, RANGE_MIN } from "./ambitus";
+import { AMBITUS_HIGH, AMBITUS_LOW, RANGE_MAX, RANGE_MIN } from "./ambitus";
 import type { Flute } from "./transposition";
 
 export type Tab = "f1" | "f2";
@@ -15,15 +15,18 @@ export interface Range {
 
 export interface AppState {
   tab: Tab;
-  f1: { writtenPc: number; flute: Flute };
+  f1: { writtenPc: number; flute: Flute; noteMidi: number };
   f2: { realPc: number; rangeLow?: number; rangeHigh?: number };
 }
 
 const STORAGE_KEY = "galoubet.state.v1";
 
+/** Note écrite posée sur la portée de F1 (Sol4, libre dans l'ambitus). */
+export const DEFAULT_NOTE_MIDI = 67;
+
 export const DEFAULT_STATE: AppState = {
   tab: "f1",
-  f1: { writtenPc: 10, flute: "Si" },
+  f1: { writtenPc: 10, flute: "Si", noteMidi: DEFAULT_NOTE_MIDI },
   f2: { realPc: 9 },
 };
 
@@ -43,6 +46,15 @@ function isRangeMidi(value: unknown): value is number {
     Number.isInteger(value) &&
     value >= RANGE_MIN &&
     value <= RANGE_MAX
+  );
+}
+
+function isAmbitusMidi(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= AMBITUS_LOW &&
+    value <= AMBITUS_HIGH
   );
 }
 
@@ -84,6 +96,10 @@ export function parseState(text: string | null): AppState {
   const writtenPc =
     f1Raw !== null && isPc(f1Raw.writtenPc) ? f1Raw.writtenPc : DEFAULT_STATE.f1.writtenPc;
   const flute = f1Raw !== null && isFlute(f1Raw.flute) ? f1Raw.flute : DEFAULT_STATE.f1.flute;
+  const noteMidi =
+    f1Raw !== null && isAmbitusMidi(f1Raw.noteMidi)
+      ? f1Raw.noteMidi
+      : DEFAULT_STATE.f1.noteMidi;
 
   const f2Raw = asRecord(record.f2);
   const realPc = f2Raw !== null && isPc(f2Raw.realPc) ? f2Raw.realPc : DEFAULT_STATE.f2.realPc;
@@ -91,7 +107,7 @@ export function parseState(text: string | null): AppState {
   const f2: AppState["f2"] =
     range === null ? { realPc } : { realPc, rangeLow: range.rangeLow, rangeHigh: range.rangeHigh };
 
-  return { tab, f1: { writtenPc, flute }, f2 };
+  return { tab, f1: { writtenPc, flute, noteMidi }, f2 };
 }
 
 export function loadState(): AppState {

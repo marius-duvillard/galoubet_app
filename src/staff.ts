@@ -174,18 +174,8 @@ export function keySignatureOf(
   return steps.slice(0, info.accidentals).map((step) => ({ symbol, step }));
 }
 
-/**
- * Tonique d'une tonalité (pitch class) posée sur la portée : première
- * occurrence du pc dans l'ambitus de lecture [63, 82]. L'ambitus couvrant
- * 20 demi-tons, l'occurrence est unique.
- */
-export function tonicInAmbitus(pc: number): number {
-  const mod = ((pc % 12) + 12) % 12;
-  return 63 + ((mod - (63 % 12)) + 12) % 12;
-}
-
-/** MIDI de la tonique réelle jouée, depuis la tonique lue et l'intervalle de la flûte. */
-export function realTonicMidi(writtenMidi: number, interval: number): number {
+/** MIDI de la note réellement jouée, depuis la note lue et l'intervalle de la flûte. */
+export function soundingMidi(writtenMidi: number, interval: number): number {
   return writtenMidi + interval;
 }
 

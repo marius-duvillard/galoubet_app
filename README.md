@@ -16,9 +16,11 @@ Deux onglets.
 On choisit la tonalité notée de la méthode et le galoubet utilisé (Si, Si♭,
 La, Sol ou Ut). L'application affiche la tonalité réellement jouée.
 
-- Une portée affiche la tonique : la note écrite (pleine) se déplace au
-  doigt ou au clavier (↑↓ degrés, ←→ altérations) et change la tonalité
-  notée ; la sonnerie réelle (creuse) suit la transposition de la flûte.
+- Une portée affiche la note écrite (pleine) et sa sonnerie réelle (creuse) :
+  la note se déplace au doigt ou au clavier (↑↓ degrés, ←→ altérations) dans
+  l'ambitus, **indépendamment de la tonalité** (les puces seules changent la
+  tonalité). L'armure de la tonalité (notée puis réelle) accompagne chaque
+  groupe de notes, dans sa couleur.
 
 ### Quelle flûte ?
 
@@ -89,7 +91,7 @@ npm install        # dépendances
 npm run dev        # serveur de développement (Vite)
 npm run build      # typecheck + build de production dans dist/
 npm run preview    # servir dist/ en local
-npm test           # 180 tests vitest (moteur + ambitus + service worker)
+npm test           # 193 tests vitest (moteur + ambitus + service worker)
 npm run typecheck  # vérification TypeScript (tsc --noEmit)
 ```
 
@@ -170,8 +172,9 @@ du cache chez les utilisateurs installés.
   de résultat) : interface React 19.
 - `src/storage.ts` : l'état (onglet actif, choix) est conservé dans
   localStorage sous une clé versionnée, avec repli sur les valeurs par
-  défaut. L'étendue du morceau (f2.rangeLow / f2.rangeHigh) partage la même
-  clé v1, avec parse tolérant (bornes invalides abandonnées ensemble).
+  défaut. L'étendue du morceau (f2.rangeLow / f2.rangeHigh) et la note
+  écrite de la portée (f1.noteMidi) partagent la même clé v1, avec parse
+  tolérant (bornes invalides abandonnées ensemble).
 - `public/manifest.webmanifest` + `public/sw.js` : le service worker sert la
   navigation en network-first (nouvelle version dès que disponible, repli sur
   le cache en hors-ligne) et les assets statiques en cache-first. Tous les

@@ -11,8 +11,7 @@ import {
   positionToNaturalMidi,
   positionY,
   keySignatureOf,
-  realTonicMidi,
-  tonicInAmbitus,
+  soundingMidi,
 } from "./staff";
 
 // A) Positions repères (clef de Sol)
@@ -144,28 +143,13 @@ describe("ledgerLinesFor", () => {
   });
 });
 
-// G) Tonique de tonalité sur la portée (F1)
-describe("tonicInAmbitus / realTonicMidi", () => {
-  it("Mi♭ (pc 3) = 63, la première ligne de l'ambitus", () => {
-    expect(tonicInAmbitus(3)).toBe(63);
+// G) Note réelle sonnée (F1)
+describe("soundingMidi", () => {
+  it("soundingMidi : Si♭ flute (−2) appliquée à Do5 (72) = 70 (Si♭4)", () => {
+    expect(soundingMidi(72, -2)).toBe(70);
   });
-  it("Do (pc 0) = 72 (Do5), Si♭ (pc 10) = 70 (Si♭4)", () => {
-    expect(tonicInAmbitus(0)).toBe(72);
-    expect(tonicInAmbitus(10)).toBe(70);
-  });
-  it("les 12 toniques tombent dans l'ambitus [63, 82] et gardent leur pc", () => {
-    for (let pc = 0; pc < 12; pc += 1) {
-      const midi = tonicInAmbitus(pc);
-      expect(midi).toBeGreaterThanOrEqual(63);
-      expect(midi).toBeLessThanOrEqual(82);
-      expect(midi % 12).toBe(pc);
-    }
-  });
-  it("realTonicMidi : Si♭ flute (−2) appliquée à Do5 (72) = 70 (Si♭4)", () => {
-    expect(realTonicMidi(72, -2)).toBe(70);
-  });
-  it("realTonicMidi : Sol flute (−5) appliquée à Do5 (72) = 67 (Sol4)", () => {
-    expect(realTonicMidi(72, -5)).toBe(67);
+  it("soundingMidi : Sol flute (−5) appliquée à Do5 (72) = 67 (Sol4)", () => {
+    expect(soundingMidi(72, -5)).toBe(67);
   });
 });
 

@@ -38,7 +38,11 @@ describe("B) parseState — plage f2", () => {
     const r = parseState(
       JSON.stringify({ tab: "f2", f1: { writtenPc: 3, flute: "La" }, f2: { realPc: 7 } }),
     );
-    expect(r).toEqual({ tab: "f2", f1: { writtenPc: 3, flute: "La" }, f2: { realPc: 7 } });
+    expect(r).toEqual({
+      tab: "f2",
+      f1: { writtenPc: 3, flute: "La", noteMidi: 67 },
+      f2: { realPc: 7 },
+    });
     expect(r.f2.rangeLow).toBeUndefined();
     expect(r.f2.rangeHigh).toBeUndefined();
   });
@@ -103,7 +107,7 @@ describe("C) parseState — validation tab / f1 / f2 préservée", () => {
       JSON.stringify({ tab: "f2", f1: { writtenPc: 0, flute: "Ut" }, f2: { realPc: 5 } }),
     );
     expect(r.tab).toBe("f2");
-    expect(r.f1).toEqual({ writtenPc: 0, flute: "Ut" });
+    expect(r.f1).toEqual({ writtenPc: 0, flute: "Ut", noteMidi: 67 });
     expect(r.f2.realPc).toBe(5);
   });
 
@@ -118,7 +122,35 @@ describe("C) parseState — validation tab / f1 / f2 préservée", () => {
     const r = parseState(
       JSON.stringify({ tab: "f1", f1: { writtenPc: 12, flute: "Ré" }, f2: { realPc: 5 } }),
     );
-    expect(r.f1).toEqual({ writtenPc: 10, flute: "Si" });
+    expect(r.f1).toEqual({ writtenPc: 10, flute: "Si", noteMidi: 67 });
+  });
+
+  it("f1.noteMidi conservé (63, borne basse)", () => {
+    const r = parseState(
+      JSON.stringify({ tab: "f1", f1: { writtenPc: 0, flute: "Ut", noteMidi: 63 }, f2: { realPc: 5 } }),
+    );
+    expect(r.f1.noteMidi).toBe(63);
+  });
+
+  it("f1.noteMidi hors ambitus (62) → défaut 67", () => {
+    const r = parseState(
+      JSON.stringify({ tab: "f1", f1: { writtenPc: 0, flute: "Ut", noteMidi: 62 }, f2: { realPc: 5 } }),
+    );
+    expect(r.f1.noteMidi).toBe(67);
+  });
+
+  it("f1.noteMidi non entier (67.5) → défaut 67", () => {
+    const r = parseState(
+      JSON.stringify({ tab: "f1", f1: { writtenPc: 0, flute: "Ut", noteMidi: 67.5 }, f2: { realPc: 5 } }),
+    );
+    expect(r.f1.noteMidi).toBe(67);
+  });
+
+  it("f1 sans noteMidi → défaut 67", () => {
+    const r = parseState(
+      JSON.stringify({ tab: "f1", f1: { writtenPc: 0, flute: "Ut" }, f2: { realPc: 5 } }),
+    );
+    expect(r.f1.noteMidi).toBe(67);
   });
 
   it("f2.realPc invalide → défaut 9", () => {

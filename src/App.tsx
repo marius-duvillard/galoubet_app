@@ -48,10 +48,14 @@ export default function App() {
         <SonReel
           writtenPc={state.f1.writtenPc}
           flute={state.f1.flute}
+          noteMidi={state.f1.noteMidi}
           onWrittenPc={(writtenPc) =>
             setState((s) => ({ ...s, f1: { ...s.f1, writtenPc } }))
           }
           onFlute={(flute) => setState((s) => ({ ...s, f1: { ...s.f1, flute } }))}
+          onNoteMidi={(noteMidi) =>
+            setState((s) => ({ ...s, f1: { ...s.f1, noteMidi } }))
+          }
         />
       ) : (
         <QuelleFlute

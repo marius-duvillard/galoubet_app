@@ -27,6 +27,14 @@ describe("A) constantes d'ambitus", () => {
   it("RANGE_MAX = 84 (Do6, borne de sélection)", () => {
     expect(RANGE_MAX).toBe(84);
   });
+  it("galoubet en Ut : ambitus réel = ambitus noté (Mi♭4 → Si♭5)", () => {
+    // Intervalle 0 : le son réel est la lecture.
+    expect(writtenRange(AMBITUS_LOW, AMBITUS_HIGH, "Ut")).toEqual({
+      low: 63,
+      high: 82,
+    });
+    expect([formatNote(63), formatNote(82)]).toEqual(["Mi♭4", "Si♭5"]);
+  });
 });
 
 // B) formatNote

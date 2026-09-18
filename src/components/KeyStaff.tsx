@@ -1,10 +1,11 @@
-// Portée de tonique (F1) : la note écrite (pleine, déplaçable) et sa
-// sonnerie réelle (creuse) côte à côte. Le déplacement de la note écrite
-// change la tonalité notée ; la tonalité réelle suit.
+// Portée de note écrite (F1) : la note posée (pleine, déplaçable) et sa
+// sonnerie réelle (creuse) côte à côte. La note est libre dans l'ambitus :
+// elle ne change pas la tonalité (les puces seules la pilotent).
+// L'armure de la tonalité (notée puis réelle) accompagne chaque groupe.
 
 import { useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
-import { formatNote } from "../ambitus";
+import { AMBITUS_HIGH, AMBITUS_LOW, formatNote } from "../ambitus";
 import { FLUTE_INTERVAL } from "../transposition";
 import type { Flute } from "../transposition";
 import {
@@ -19,25 +20,21 @@ import {
   midiWithAccidental,
   midiWithAccidentalShift,
   positionY,
-  realTonicMidi,
+  soundingMidi,
   staffLayout,
-  tonicInAmbitus,
 } from "../staff";
 import { Signature } from "./Signature";
-
 
 interface KeyStaffProps {
   writtenPc: number;
   flute: Flute;
-  onWrittenPc: (pc: number) => void;
+  writtenMidi: number;
+  onWrittenMidi: (midi: number) => void;
 }
 
 const VIEW_X = 0;
 const VIEW_Y = -44;
 const VIEW_H = 202;
-
-const AMBITUS_LOW = 63;
-const AMBITUS_HIGH = 82;
 
 function clampAmbitus(midi: number): number {
   return Math.min(AMBITUS_HIGH, Math.max(AMBITUS_LOW, midi));
@@ -85,13 +82,12 @@ function NoteShape({
   );
 }
 
-export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
+export function KeyStaff({ writtenPc, flute, writtenMidi, onWrittenMidi }: KeyStaffProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragging, setDragging] = useState(false);
 
-  const writtenMidi = tonicInAmbitus(writtenPc);
   const interval = FLUTE_INTERVAL[flute];
-  const realMidi = realTonicMidi(writtenMidi, interval);
+  const realMidi = soundingMidi(writtenMidi, interval);
   const realPc = ((writtenPc + interval) % 12 + 12) % 12;
 
   const { group1, group2, viewWidth } = staffLayout(
@@ -110,8 +106,7 @@ export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
   };
 
   const moveTo = (position: number): void => {
-    const moved = clampAmbitus(midiWithAccidental(writtenMidi, position));
-    onWrittenPc(((moved % 12) + 12) % 12);
+    onWrittenMidi(clampAmbitus(midiWithAccidental(writtenMidi, position)));
   };
 
   const onPointerDown = (event: PointerEvent<SVGSVGElement>): void => {
@@ -143,10 +138,9 @@ export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
       moveTo(midiToPosition(writtenMidi) + (event.key === "ArrowUp" ? 1 : -1));
     } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
-      const shifted = clampAmbitus(
-        midiWithAccidentalShift(writtenMidi, event.key === "ArrowRight" ? 1 : -1),
+      onWrittenMidi(
+        clampAmbitus(midiWithAccidentalShift(writtenMidi, event.key === "ArrowRight" ? 1 : -1)),
       );
-      onWrittenPc(((shifted % 12) + 12) % 12);
     }
   };
 
@@ -157,7 +151,7 @@ export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
         className="staff__svg"
         viewBox={`${VIEW_X} ${VIEW_Y} ${viewWidth} ${VIEW_H}`}
         role="group"
-        aria-label="Tonalité sur la portée"
+        aria-label="Note écrite sur la portée"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -174,7 +168,7 @@ export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
           className="staff__note"
           role="slider"
           tabIndex={0}
-          aria-label="Note écrite (tonique lue)"
+          aria-label="Note écrite"
           aria-valuemin={midiToPosition(AMBITUS_LOW)}
           aria-valuenow={midiToPosition(writtenMidi)}
           aria-valuemax={midiToPosition(AMBITUS_HIGH)}
