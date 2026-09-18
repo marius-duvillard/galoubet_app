@@ -16,6 +16,10 @@ Deux onglets.
 On choisit la tonalité notée de la méthode et le galoubet utilisé (Si, Si♭,
 La, Sol ou Ut). L'application affiche la tonalité réellement jouée.
 
+- Une portée affiche la tonique : la note écrite (pleine) se déplace au
+  doigt ou au clavier (↑↓ degrés, ←→ altérations) et change la tonalité
+  notée ; la sonnerie réelle (creuse) suit la transposition de la flûte.
+
 ### Quelle flûte ?
 
 On choisit la tonalité réelle du morceau. L'application propose la meilleure
@@ -24,10 +28,14 @@ confort de jeu, avec pour référence Si♭ majeur (2 bémols). Une configuratio
 hors plage est signalée explicitement.
 
 - On peut saisir l'étendue du morceau en son réel (notes la plus grave et la
-  plus aiguë, entre Do3 et Do6) : les flûtes dont la lecture tient dans
-  l'ambitus du galoubet sont proposées en premier.
+  plus aiguë, entre Do3 et Do6) : soit en touchant/déplaçant les notes sur la
+  portée (souris ou tactile), soit via les sélecteurs (repli) ; les flûtes
+  dont la lecture tient dans l'ambitus du galoubet sont proposées en premier.
 - Une configuration dont la lecture ne tient pas dans l'ambitus porte le
   badge « hors ambitus ».
+- En saisie d'étendue, la portée affiche aussi la lecture de la
+  configuration sélectionnée (notes creuses à droite) : cliquer une carte
+  ou une option change la lecture affichée.
 
 ## Conventions musicales
 
@@ -81,7 +89,7 @@ npm install        # dépendances
 npm run dev        # serveur de développement (Vite)
 npm run build      # typecheck + build de production dans dist/
 npm run preview    # servir dist/ en local
-npm test           # 142 tests vitest (moteur + ambitus + service worker)
+npm test           # 180 tests vitest (moteur + ambitus + service worker)
 npm run typecheck  # vérification TypeScript (tsc --noEmit)
 ```
 
