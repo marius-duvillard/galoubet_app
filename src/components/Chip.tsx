@@ -4,9 +4,10 @@ interface ChipProps {
   label: string;
   selected: boolean;
   onSelect: () => void;
+  sublabel?: string;
 }
 
-export function Chip({ label, selected, onSelect }: ChipProps) {
+export function Chip({ label, selected, onSelect, sublabel }: ChipProps) {
   return (
     <button
       type="button"
@@ -14,7 +15,14 @@ export function Chip({ label, selected, onSelect }: ChipProps) {
       aria-pressed={selected}
       onClick={onSelect}
     >
-      {label}
+      {sublabel === undefined ? (
+        label
+      ) : (
+        <>
+          <span className="chip__label">{label}</span>
+          <span className="chip__sub">{sublabel}</span>
+        </>
+      )}
     </button>
   );
 }

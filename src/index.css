@@ -404,3 +404,19 @@ body {
     transform: none;
   }
 }
+
+/* ── Sous-étiquette des puces (armure) ── */
+
+.chip__label {
+  display: block;
+}
+
+.chip__sub {
+  display: block;
+  font-size: 0.72em;
+  color: var(--ink-soft);
+}
+
+.chip--selected .chip__sub {
+  color: rgba(255, 255, 255, 0.85);
+}

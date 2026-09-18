@@ -1,6 +1,6 @@
 // Grille des 12 toniques (4×3), étiquettes issues du moteur (CHIP_KEYS).
 
-import { CHIP_KEYS } from "../transposition";
+import { CHIP_KEYS, signatureLabel } from "../transposition";
 import { Chip } from "./Chip";
 
 interface KeyChipGridProps {
@@ -18,6 +18,7 @@ export function KeyChipGrid({ ariaLabel, value, onChange }: KeyChipGridProps) {
           label={k.name}
           selected={value === k.pc}
           onSelect={() => onChange(k.pc)}
+          sublabel={signatureLabel(k.pc)}
         />
       ))}
     </div>
