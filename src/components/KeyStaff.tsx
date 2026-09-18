@@ -1,6 +1,6 @@
 // Portée de note écrite (F1) : la note posée (pleine, déplaçable) et sa
-// sonnerie réelle (creuse) côte à côte. La note est libre dans l'ambitus :
-// elle ne change pas la tonalité (les puces seules la pilotent).
+// sonnerie réelle (creuse) côte à côte. La note suit l'armure de la
+// tonalité (elle ne change pas la tonalité : les puces seules la pilotent).
 // L'armure de la tonalité (notée puis réelle) accompagne chaque groupe.
 
 import { useRef, useState } from "react";
@@ -17,8 +17,7 @@ import {
   keySignatureOf,
   ledgerLinesFor,
   midiToPosition,
-  midiWithAccidental,
-  midiWithAccidentalShift,
+  midiWithKeySignature,
   positionY,
   soundingMidi,
   staffLayout,
@@ -106,7 +105,7 @@ export function KeyStaff({ writtenPc, flute, writtenMidi, onWrittenMidi }: KeySt
   };
 
   const moveTo = (position: number): void => {
-    onWrittenMidi(clampAmbitus(midiWithAccidental(writtenMidi, position)));
+    onWrittenMidi(clampAmbitus(midiWithKeySignature(position, writtenPc)));
   };
 
   const onPointerDown = (event: PointerEvent<SVGSVGElement>): void => {
@@ -136,11 +135,6 @@ export function KeyStaff({ writtenPc, flute, writtenMidi, onWrittenMidi }: KeySt
     if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
       moveTo(midiToPosition(writtenMidi) + (event.key === "ArrowUp" ? 1 : -1));
-    } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-      event.preventDefault();
-      onWrittenMidi(
-        clampAmbitus(midiWithAccidentalShift(writtenMidi, event.key === "ArrowRight" ? 1 : -1)),
-      );
     }
   };
 

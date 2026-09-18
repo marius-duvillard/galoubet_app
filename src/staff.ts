@@ -69,18 +69,35 @@ export function clampMidi(midi: number): number {
 }
 
 /**
- * MIDI obtenu en déplaçant une note vers une position : la note garde
- * l'altération canonique qu'elle portait (Mi♭ → Fa♭), clampée dans [48, 84].
+ * Degrés (pitch classes naturels) altérés par l'armure, dans l'ordre
+ * d'écriture : bémols Si Mi La Ré Sol Do Fa, dièses Fa Do Sol Ré La Mi Si.
  */
-export function midiWithAccidental(midi: number, position: number): number {
-  return clampMidi(positionToNaturalMidi(position) + midiAccidental(midi));
+const FLAT_DEGREES: readonly number[] = [11, 4, 9, 2, 7, 0, 5];
+const SHARP_DEGREES: readonly number[] = [5, 0, 7, 2, 9, 4, 11];
+
+/**
+ * Altération d'armure (−1/0/+1) d'un degré (pc naturel) dans une tonalité :
+ * c'est l'armure qui la donne, pas l'historique de la note.
+ */
+export function keySignatureAccidental(keyPc: number, degreePc: number): number {
+  const info = keyInfo(keyPc);
+  if (info.accidentalType === "none") {
+    return 0;
+  }
+  const order = info.accidentalType === "flat" ? FLAT_DEGREES : SHARP_DEGREES;
+  const index = order.indexOf(degreePc);
+  return index >= 0 && index < info.accidentals ? (info.accidentalType === "flat" ? -1 : 1) : 0;
 }
 
-/** MIDI après changement d'altération (−1 = ♭, 0 = ♮, +1 = ♯), même position. */
-export function midiWithAccidentalShift(midi: number, delta: number): number {
-  const position = midiToPosition(midi);
+/**
+ * MIDI obtenu en posant une note sur une position : le degré suit
+ * l'armure de la tonalité (tonalité de Si♭ → la ligne du Si donne Si♭),
+ * clampé dans [48, 84].
+ */
+export function midiWithKeySignature(position: number, keyPc: number | null): number {
   const natural = positionToNaturalMidi(position);
-  return clampMidi(natural + Math.max(-1, Math.min(1, midiAccidental(midi) + delta)));
+  const acc = keyPc === null ? 0 : keySignatureAccidental(keyPc, natural % 12);
+  return clampMidi(natural + acc);
 }
 
 /**

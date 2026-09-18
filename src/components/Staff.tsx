@@ -15,8 +15,7 @@ import {
   keySignatureOf,
   ledgerLinesFor,
   midiToPosition,
-  midiWithAccidental,
-  midiWithAccidentalShift,
+  midiWithKeySignature,
   positionY,
   staffLayout,
 } from "../staff";
@@ -58,14 +57,12 @@ function Note({
   midi,
   x,
   ariaLabel,
-  onMove,
-  onAccidental,
+  onStep,
 }: {
   midi: number;
   x: number;
   ariaLabel: string;
-  onMove: (midi: number) => void;
-  onAccidental: (delta: number) => void;
+  onStep: (delta: number) => void;
 }) {
   const position = midiToPosition(midi);
   const y = positionY(position);
@@ -77,10 +74,7 @@ function Note({
   const keyDown = (event: KeyboardEvent<SVGGElement>): void => {
     if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
-      onMove(midiWithAccidental(midi, position + (event.key === "ArrowUp" ? 1 : -1)));
-    } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-      event.preventDefault();
-      onAccidental(event.key === "ArrowRight" ? 1 : -1);
+      onStep(event.key === "ArrowUp" ? 1 : -1);
     }
   };
   return (
@@ -211,7 +205,7 @@ export function Staff({
     const position = positionFromEvent(event);
     if (low === undefined && high === undefined) {
       // un tap pose les deux notes sur la même position
-      const midi = midiWithAccidental(64, position);
+      const midi = midiWithKeySignature(position, signaturePc);
       onChange(midi, midi);
       setDrag("high");
       capturePointer(event);
@@ -228,8 +222,7 @@ export function Staff({
           ? "low"
           : "high";
     setDrag(target);
-    const midi = target === "low" ? (low as number) : (high as number);
-    const moved = midiWithAccidental(midi, position);
+    const moved = midiWithKeySignature(position, signaturePc);
     if (target === "low") moveLow(moved);
     else moveHigh(moved);
     capturePointer(event);
@@ -238,8 +231,7 @@ export function Staff({
   const onPointerMove = (event: PointerEvent<SVGSVGElement>): void => {
     if (drag === null) return;
     const position = positionFromEvent(event);
-    const midi = drag === "low" ? (low as number) : (high as number);
-    const moved = midiWithAccidental(midi, position);
+    const moved = midiWithKeySignature(position, signaturePc);
     if (drag === "low") moveLow(moved);
     else moveHigh(moved);
   };
@@ -269,10 +261,20 @@ export function Staff({
         </g>
         {signaturePc !== null && <Signature pc={signaturePc} at={group1.signatureX} />}
         {low !== undefined && (
-          <Note midi={low} x={group1.note1X} ariaLabel="Note la plus grave" onMove={moveLow} onAccidental={(d) => moveLow(midiWithAccidentalShift(low, d))} />
+          <Note
+            midi={low}
+            x={group1.note1X}
+            ariaLabel="Note la plus grave"
+            onStep={(d) => moveLow(midiWithKeySignature(midiToPosition(low) + d, signaturePc))}
+          />
         )}
         {high !== undefined && (
-          <Note midi={high} x={group1.note2X!} ariaLabel="Note la plus aiguë" onMove={moveHigh} onAccidental={(d) => moveHigh(midiWithAccidentalShift(high, d))} />
+          <Note
+            midi={high}
+            x={group1.note2X!}
+            ariaLabel="Note la plus aiguë"
+            onStep={(d) => moveHigh(midiWithKeySignature(midiToPosition(high) + d, signaturePc))}
+          />
         )}
         {low === undefined && high === undefined && (
           <g className="staff__ghost">

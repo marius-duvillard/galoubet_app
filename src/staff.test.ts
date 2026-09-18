@@ -3,11 +3,11 @@ import {
   STAFF_SPACING,
   accidentalSymbol,
   clampMidi,
+  keySignatureAccidental,
   ledgerLinesFor,
   midiAccidental,
   midiToPosition,
-  midiWithAccidental,
-  midiWithAccidentalShift,
+  midiWithKeySignature,
   positionToNaturalMidi,
   positionY,
   keySignatureOf,
@@ -80,42 +80,47 @@ describe("midiAccidental / accidentalSymbol", () => {
   });
 });
 
-// D) Déplacement avec altération conservée
-describe("midiWithAccidental", () => {
-  it("Mi♭4 (63) → position 0 reste 63", () => {
-    expect(midiWithAccidental(63, 0)).toBe(63);
+// D) Note posée : l'armure donne l'altération
+describe("keySignatureAccidental", () => {
+  it("Do (0 accident) : aucun degré altéré", () => {
+    expect(keySignatureAccidental(0, 11)).toBe(0);
+    expect(keySignatureAccidental(0, 4)).toBe(0);
   });
-  it("Mi♭4 (63) → position 1 (Fa) = 64 (Fa♭ = hauteur Mi)", () => {
-    expect(midiWithAccidental(63, 1)).toBe(64);
+  it("Si♭ (2♭) : Si et Mi à −1, La à 0", () => {
+    expect(keySignatureAccidental(10, 11)).toBe(-1);
+    expect(keySignatureAccidental(10, 4)).toBe(-1);
+    expect(keySignatureAccidental(10, 9)).toBe(0);
   });
-  it("Do♯4 (61) → position 2 (Sol) = 68 (Sol♭ = La♭)", () => {
-    expect(midiWithAccidental(61, 2)).toBe(68);
+  it("Ré (2♯) : Fa et Do à +1, Sol à 0", () => {
+    expect(keySignatureAccidental(2, 5)).toBe(1);
+    expect(keySignatureAccidental(2, 0)).toBe(1);
+    expect(keySignatureAccidental(2, 7)).toBe(0);
   });
-  it("Mi4 (64) → position 12 = 84 (Do6)", () => {
-    expect(midiWithAccidental(64, 12)).toBe(84);
-  });
-  it("clamp bas : Do3 (48) → position −10 = 48 (jamais sous RANGE_MIN)", () => {
-    expect(midiWithAccidental(48, -10)).toBe(48);
-  });
-  it("clamp haut : Do6 (84) → position 13 = 84 (jamais au-dessus de RANGE_MAX)", () => {
-    expect(midiWithAccidental(84, 13)).toBe(84);
+  it("Mi♭ (3♭) : Si, Mi, La à −1", () => {
+    expect(keySignatureAccidental(3, 11)).toBe(-1);
+    expect(keySignatureAccidental(3, 4)).toBe(-1);
+    expect(keySignatureAccidental(3, 9)).toBe(-1);
   });
 });
 
-// E) Changement d'altération au clavier
-describe("midiWithAccidentalShift", () => {
-  it("Mi4 (64) −1 → Mi♭4 (63)", () => {
-    expect(midiWithAccidentalShift(64, -1)).toBe(63);
+describe("midiWithKeySignature", () => {
+  it("tonalité Si♭ : la ligne du Si (position 4) donne Si♭4 (70)", () => {
+    expect(midiWithKeySignature(4, 10)).toBe(70);
   });
-  it("Mi♭4 (63) +1 → Mi4 (64)", () => {
-    expect(midiWithAccidentalShift(63, 1)).toBe(64);
+  it("tonalité Si♭ : la sous-ligne du Mi (position 0) donne Mi♭4 (63)", () => {
+    expect(midiWithKeySignature(0, 10)).toBe(63);
   });
-  it("Mi4 (64) +1 → Fa♯4 ? Non : Mi♯ = Fa (65) via pc canonique", () => {
-    // Mi♯ n'est pas un nom canonique : clampé à +1, naturel+1 = 65 (Fa♯ canonique)
-    expect(midiWithAccidentalShift(64, 1)).toBe(65);
+  it("tonalité Do : la ligne du Si donne Si♮4 (71)", () => {
+    expect(midiWithKeySignature(4, 0)).toBe(71);
   });
-  it("Mi♭4 (63) −1 → ♭ clampé : naturel 64 + (−1) = 63", () => {
-    expect(midiWithAccidentalShift(63, -1)).toBe(63);
+  it("tonalité Sol (1♯) : la ligne du Fa donne Fa♯4 (66)", () => {
+    expect(midiWithKeySignature(1, 7)).toBe(66);
+  });
+  it("armure null : degré naturel (repli)", () => {
+    expect(midiWithKeySignature(4, null)).toBe(71);
+  });
+  it("clamp : position 12 (Do6) avec armure = 84", () => {
+    expect(midiWithKeySignature(12, 10)).toBe(84);
   });
 });
 

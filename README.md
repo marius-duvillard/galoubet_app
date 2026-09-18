@@ -17,10 +17,11 @@ On choisit la tonalité notée de la méthode et le galoubet utilisé (Si, Si♭
 La, Sol ou Ut). L'application affiche la tonalité réellement jouée.
 
 - Une portée affiche la note écrite (pleine) et sa sonnerie réelle (creuse) :
-  la note se déplace au doigt ou au clavier (↑↓ degrés, ←→ altérations) dans
-  l'ambitus, **indépendamment de la tonalité** (les puces seules changent la
-  tonalité). L'armure de la tonalité (notée puis réelle) accompagne chaque
-  groupe de notes, dans sa couleur.
+  la note se déplace au doigt ou au clavier (↑↓ degrés) dans l'ambitus, en
+  suivant l'armure de la tonalité (posée sur la ligne du Si en Si♭ majeur,
+  elle donne Si♭), **indépendamment de la tonalité** (les puces seules
+  changent la tonalité). L'armure de la tonalité (notée puis réelle)
+  accompagne chaque groupe de notes, dans sa couleur.
 
 ### Quelle flûte ?
 
