@@ -8,6 +8,7 @@ import type { Flute } from "../transposition";
 import { FieldSection } from "../components/FieldSection";
 import { KeyChipGrid } from "../components/KeyChipGrid";
 import { RangeSelect } from "../components/RangeSelect";
+import { Staff } from "../components/Staff";
 import { ComfortBadge } from "../components/ComfortBadge";
 import { ResultCard } from "../components/ResultCard";
 
@@ -210,6 +211,7 @@ export function QuelleFlute({
       </FieldSection>
 
       <FieldSection id="f2-range" title="Étendue du morceau (son réel)">
+        <Staff low={rangeLow} high={rangeHigh} onChange={onRange} />
         <RangeSelect low={rangeLow} high={rangeHigh} onChange={onRange} />
       </FieldSection>
 

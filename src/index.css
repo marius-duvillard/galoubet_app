@@ -430,6 +430,87 @@ body {
 
 /* ── Étendue du morceau (F2) ── */
 
+.staff {
+  margin: 0 0 10px;
+}
+
+.staff__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.staff__svg:active {
+  cursor: grabbing;
+}
+
+.staff__line,
+.staff__ledger {
+  stroke: var(--ink);
+  stroke-width: 1.4;
+}
+
+.staff__clef {
+  fill: var(--ink);
+}
+
+.staff__head {
+  fill: var(--ink);
+}
+
+.staff__stem {
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.staff__accidental {
+  fill: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+}
+
+.staff__label {
+  fill: var(--ink-soft);
+  font-family: var(--serif);
+  font-size: 12px;
+  text-anchor: start;
+}
+
+.staff__note {
+  cursor: grab;
+  outline: none;
+}
+
+.staff__note:focus-visible .staff__head {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+
+.staff__note:focus-visible .staff__label {
+  fill: var(--accent);
+  font-weight: 700;
+}
+
+.staff__ghost {
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 3;
+}
+
+.staff__hint {
+  fill: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 11px;
+  text-anchor: middle;
+  stroke: none;
+}
+
 .range {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
