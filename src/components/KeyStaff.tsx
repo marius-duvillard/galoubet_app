@@ -13,7 +13,7 @@ import {
   CLEF_TRANSFORM,
   STAFF_BOTTOM_Y,
   STAFF_SPACING,
-  accidentalSymbol,
+  accidentalNotation,
   keySignatureOf,
   ledgerLinesFor,
   midiToPosition,
@@ -42,15 +42,17 @@ function clampAmbitus(midi: number): number {
 function NoteShape({
   midi,
   x,
+  keyPc,
   hollow,
 }: {
   midi: number;
   x: number;
+  keyPc: number | null;
   hollow: boolean;
 }) {
   const position = midiToPosition(midi);
   const y = positionY(position);
-  const acc = accidentalSymbol(midi);
+  const acc = accidentalNotation(midi, keyPc);
   const stemUp = position < 4;
   const stemX = stemUp ? x + 5.3 : x - 5.3;
   const stemY1 = stemUp ? y - 2.4 : y + 2.4;
@@ -169,11 +171,11 @@ export function KeyStaff({ writtenPc, flute, writtenMidi, onWrittenMidi }: KeySt
           aria-valuetext={formatNote(writtenMidi)}
           onKeyDown={keyDown}
         >
-          <NoteShape midi={writtenMidi} x={group1.note1X} hollow={false} />
+          <NoteShape midi={writtenMidi} x={group1.note1X} keyPc={writtenPc} hollow={false} />
         </g>
         <g role="img" aria-label={`Son réel : ${formatNote(realMidi)}`}>
           <Signature pc={realPc} at={group2.signatureX} written />
-          <NoteShape midi={realMidi} x={group2.note1X} hollow />
+          <NoteShape midi={realMidi} x={group2.note1X} keyPc={realPc} hollow />
         </g>
       </svg>
       <p className="staff__legend">

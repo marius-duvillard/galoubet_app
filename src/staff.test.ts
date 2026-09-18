@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   STAFF_SPACING,
+  accidentalNotation,
   accidentalSymbol,
   clampMidi,
   keySignatureAccidental,
@@ -121,6 +122,35 @@ describe("midiWithKeySignature", () => {
   });
   it("clamp : position 12 (Do6) avec armure = 84", () => {
     expect(midiWithKeySignature(12, 10)).toBe(84);
+  });
+});
+
+// D2) Convention de notation : l'armure tient lieu d'altération
+describe("accidentalNotation", () => {
+  it("Si♭4 (70) en Si♭ majeur (2♭) : rien à tirer (l'armure le donne)", () => {
+    expect(accidentalNotation(70, 10)).toBeNull();
+  });
+  it("Si♮4 (71) en Si♭ majeur : bécarre", () => {
+    expect(accidentalNotation(71, 10)).toBe("♮");
+  });
+  it("La♭5 (80) en Si majeur (5♯) : bécarre + bémol", () => {
+    expect(accidentalNotation(80, 11)).toBe("♮♭");
+  });
+  it("Fa♯4 (66) en Ré majeur (2♯) : rien (l'armure le donne)", () => {
+    expect(accidentalNotation(66, 2)).toBeNull();
+  });
+  it("Fa♮4 (65) en Ré majeur : bécarre", () => {
+    expect(accidentalNotation(65, 2)).toBe("♮");
+  });
+  it("Mi♭4 (63) en Do majeur (0) : bémol", () => {
+    expect(accidentalNotation(63, 0)).toBe("♭");
+  });
+  it("Sol4 (67) en Do majeur : rien", () => {
+    expect(accidentalNotation(67, 0)).toBeNull();
+  });
+  it("armure null : comportement altération canonique", () => {
+    expect(accidentalNotation(63, null)).toBe("♭");
+    expect(accidentalNotation(67, null)).toBeNull();
   });
 });
 

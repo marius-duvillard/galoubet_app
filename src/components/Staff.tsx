@@ -11,7 +11,7 @@ import {
   CLEF_TRANSFORM,
   STAFF_BOTTOM_Y,
   STAFF_SPACING,
-  accidentalSymbol,
+  accidentalNotation,
   keySignatureOf,
   ledgerLinesFor,
   midiToPosition,
@@ -56,17 +56,19 @@ function capturePointer(event: PointerEvent<SVGSVGElement>): void {
 function Note({
   midi,
   x,
+  keyPc,
   ariaLabel,
   onStep,
 }: {
   midi: number;
   x: number;
+  keyPc: number | null;
   ariaLabel: string;
   onStep: (delta: number) => void;
 }) {
   const position = midiToPosition(midi);
   const y = positionY(position);
-  const acc = accidentalSymbol(midi);
+  const acc = accidentalNotation(midi, keyPc);
   const stemUp = position < 4;
   const stemX = stemUp ? x + 5.3 : x - 5.3;
   const stemY1 = stemUp ? y - 2.4 : y + 2.4;
@@ -113,10 +115,10 @@ function Note({
   );
 }
 
-function WrittenNote({ midi, x }: { midi: number; x: number }) {
+function WrittenNote({ midi, x, keyPc }: { midi: number; x: number; keyPc: number | null }) {
   const position = midiToPosition(midi);
   const y = positionY(position);
-  const acc = accidentalSymbol(midi);
+  const acc = accidentalNotation(midi, keyPc);
   const stemUp = position < 4;
   const stemX = stemUp ? x + 5.3 : x - 5.3;
   const stemY1 = stemUp ? y - 2.4 : y + 2.4;
@@ -264,6 +266,7 @@ export function Staff({
           <Note
             midi={low}
             x={group1.note1X}
+            keyPc={signaturePc}
             ariaLabel="Note la plus grave"
             onStep={(d) => moveLow(midiWithKeySignature(midiToPosition(low) + d, signaturePc))}
           />
@@ -272,6 +275,7 @@ export function Staff({
           <Note
             midi={high}
             x={group1.note2X!}
+            keyPc={signaturePc}
             ariaLabel="Note la plus aiguë"
             onStep={(d) => moveHigh(midiWithKeySignature(midiToPosition(high) + d, signaturePc))}
           />
@@ -287,8 +291,8 @@ export function Staff({
         {written !== null && (
           <g role="img" aria-label={`Notes lues par le galoubet en ${written.flute} : ${formatNote(written.low)} → ${formatNote(written.high)}`}>
             {writtenSignaturePc !== null && <Signature pc={writtenSignaturePc} at={group2.signatureX} written />}
-            <WrittenNote midi={written.low} x={group2.note1X} />
-            <WrittenNote midi={written.high} x={group2.note2X!} />
+            <WrittenNote midi={written.low} x={group2.note1X} keyPc={writtenSignaturePc} />
+            <WrittenNote midi={written.high} x={group2.note2X!} keyPc={writtenSignaturePc} />
           </g>
         )}
       </svg>

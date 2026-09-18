@@ -123,6 +123,28 @@ export function accidentalSymbol(midi: number): string | null {
 }
 
 /**
+ * Altération à tirer devant la note selon la convention de portée :
+ * l'armure tient lieu d'altération (rien si la note la suit), ♮ pour
+ * l'annuler, ♭/♯ pour s'en écarter, ♮♭/♮♯ contre une armure altérée.
+ */
+export function accidentalNotation(midi: number, keyPc: number | null): string | null {
+  const name = STAFF_NAMES[((midi % 12) + 12) % 12];
+  const noteAcc = name.accidental;
+  const degreePc = NATURAL_PC[name.letter];
+  const keyAcc = keyPc === null ? 0 : keySignatureAccidental(keyPc, degreePc);
+  if (noteAcc === keyAcc) {
+    return null;
+  }
+  if (noteAcc === 0) {
+    return "♮";
+  }
+  if (keyAcc === 0) {
+    return noteAcc < 0 ? "♭" : "♯";
+  }
+  return noteAcc < 0 ? "♮♭" : "♮♯";
+}
+
+/**
  * Layout d'un groupe (armure + notes) : la position de la note dépend de la
  * largeur de l'armure, pour que les deux restent côte à côte sans se toucher.
  */
