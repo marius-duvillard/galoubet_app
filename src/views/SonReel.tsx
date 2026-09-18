@@ -1,6 +1,6 @@
 // F1 « Son réel » : tonalité notée + galoubet → tonalité réelle jouée.
 
-import { comfort, formatKey, realTone } from "../transposition";
+import { comfort, formatKey, intervalLabel, realTone } from "../transposition";
 import type { Flute } from "../transposition";
 import { FieldSection } from "../components/FieldSection";
 import { KeyChipGrid } from "../components/KeyChipGrid";
@@ -35,7 +35,7 @@ export function SonReel({ writtenPc, flute, onWrittenPc, onFlute }: SonReelProps
         overline="Tonalité réelle jouée"
         tonality={realKey}
         badgeLabel={writtenComfort.label}
-        note={`Vous lisez en ${writtenKey}, vous sonnez en ${realKey}.`}
+        note={`Vous lisez en ${writtenKey}, vous sonnez en ${realKey}. Transposition : ${intervalLabel(flute)}.`}
       />
     </div>
   );
