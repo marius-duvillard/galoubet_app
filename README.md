@@ -7,6 +7,10 @@ méthode et aide à choisir la bonne flûte pour un morceau.
 
 Deux onglets.
 
+- Les puces de tonalité affichent l'armure de la tonalité (ex. « 2♭ »).
+- Le rappel de la transposition (intervalle notée → réelle) figure dans les
+  deux onglets.
+
 ### Son réel
 
 On choisit la tonalité notée de la méthode et le galoubet utilisé (Si, Si♭,
@@ -19,20 +23,34 @@ configuration (flûte + tonalité notée) et les alternatives, classées par
 confort de jeu, avec pour référence Si♭ majeur (2 bémols). Une configuration
 hors plage est signalée explicitement.
 
+- On peut saisir l'étendue du morceau en son réel (notes la plus grave et la
+  plus aiguë, entre Do3 et Do6) : les flûtes dont la lecture tient dans
+  l'ambitus du galoubet sont proposées en premier.
+- Une configuration dont la lecture ne tient pas dans l'ambitus porte le
+  badge « hors ambitus ».
+
 ## Conventions musicales
 
-Règles exactes du moteur, codées dans `src/transposition.ts`.
+Règles exactes du moteur, codées dans `src/transposition.ts` et
+`src/ambitus.ts`.
 
 Un galoubet est nommé par la note qui sonne quand on lit Do. Le nom donne
 l'intervalle notée → réelle, en demi-tons :
 
-| Galoubet | Intervalle notée → réelle |
-| -------- | ------------------------- |
-| Si       | -1 demi-ton               |
-| Si♭      | -2 demi-tons              |
-| La       | -3 demi-tons              |
-| Sol      | -5 demi-tons              |
-| Ut       | 0 (transposition nulle)   |
+| Galoubet | Intervalle notée → réelle | Nom usuel              |
+| -------- | ------------------------- | ---------------------- |
+| Si       | -1 demi-ton               | 2de mineure plus bas   |
+| Si♭      | -2 demi-tons              | 2de majeure plus bas   |
+| La       | -3 demi-tons              | 3ce mineure plus bas   |
+| Sol      | -5 demi-tons              | 4te juste plus bas     |
+| Ut       | 0 (transposition nulle)   | à l'unisson            |
+
+Règle d'écriture : note notée = note réelle − intervalle de la flûte.
+
+Ambitus du galoubet, en lecture galoubet : de Mi♭4 (MIDI 63, première ligne
+de la portée) à Si♭5 (MIDI 82, au-dessus de la portée), inclus. L'étendue du
+morceau se saisit en son réel, note la plus grave et note la plus aiguë
+choisies entre Do3 (MIDI 48) et Do6 (MIDI 84).
 
 Plage confortable : une tonique notée est confortable entre 0 et 3 bémols,
 c'est-à-dire Do majeur (0), Fa majeur (1 bémol), Si♭ majeur (2 bémols) et
@@ -63,7 +81,7 @@ npm install        # dépendances
 npm run dev        # serveur de développement (Vite)
 npm run build      # typecheck + build de production dans dist/
 npm run preview    # servir dist/ en local
-npm test           # 77 tests vitest (moteur + service worker)
+npm test           # 142 tests vitest (moteur + ambitus + service worker)
 npm run typecheck  # vérification TypeScript (tsc --noEmit)
 ```
 
@@ -134,14 +152,18 @@ du cache chez les utilisateurs installés.
 
 - `src/transposition.ts` : moteur de transposition pur, sans dépendance et
   sans DOM. 100 % testé (tests dans `src/transposition.test.ts`).
+- `src/ambitus.ts` : module pur de l'ambitus du galoubet (`formatNote`,
+  `writtenRange`, `fitsAmbitus`, `pickWithRange`), sans DOM, dépend
+  uniquement de `src/transposition.ts`.
 - `src/sw.test.ts` : tests du service worker (harness `node:vm` exécutant le
   vrai `public/sw.js`), y compris le cas sous-chemin GitHub Pages.
 - `src/views/` (SonReel, QuelleFlute) et `src/components/` (grille de
-  tonalités, puces de flûtes, badges de confort, cartes de résultat) :
-  interface React 19.
+  tonalités, puces de flûtes, sélecteur d'étendue, badges de confort, cartes
+  de résultat) : interface React 19.
 - `src/storage.ts` : l'état (onglet actif, choix) est conservé dans
   localStorage sous une clé versionnée, avec repli sur les valeurs par
-  défaut.
+  défaut. L'étendue du morceau (f2.rangeLow / f2.rangeHigh) partage la même
+  clé v1, avec parse tolérant (bornes invalides abandonnées ensemble).
 - `public/manifest.webmanifest` + `public/sw.js` : le service worker sert la
   navigation en network-first (nouvelle version dès que disponible, repli sur
   le cache en hors-ligne) et les assets statiques en cache-first. Tous les
