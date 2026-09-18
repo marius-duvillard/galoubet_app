@@ -56,7 +56,12 @@ export default function App() {
       ) : (
         <QuelleFlute
           realPc={state.f2.realPc}
-          onRealPc={(realPc) => setState((s) => ({ ...s, f2: { realPc } }))}
+          onRealPc={(realPc) => setState((s) => ({ ...s, f2: { ...s.f2, realPc } }))}
+          rangeLow={state.f2.rangeLow}
+          rangeHigh={state.f2.rangeHigh}
+          onRange={(rangeLow, rangeHigh) =>
+            setState((s) => ({ ...s, f2: { ...s.f2, rangeLow, rangeHigh } }))
+          }
         />
       )}
 

@@ -8,7 +8,9 @@ interface ResultCardProps {
   overline: string;
   tonality: string;
   keyLine?: string;
+  rangeLine?: string;
   badgeLabel: string;
+  extraBadge?: string;
   note?: string;
   fallback?: boolean;
 }
@@ -18,7 +20,9 @@ export function ResultCard({
   overline,
   tonality,
   keyLine,
+  rangeLine,
   badgeLabel,
+  extraBadge,
   note,
   fallback = false,
 }: ResultCardProps) {
@@ -30,8 +34,10 @@ export function ResultCard({
       </h2>
       <p className="result__tonality">{tonality}</p>
       {keyLine !== undefined && <p className="result__keyline">{keyLine}</p>}
+      {rangeLine !== undefined && <p className="result__rangeline">{rangeLine}</p>}
       <div className="result__badge">
         <ComfortBadge label={badgeLabel} />
+        {extraBadge !== undefined && <ComfortBadge small label={extraBadge} />}
       </div>
       {note !== undefined && <p className="result__note">{note}</p>}
     </section>

@@ -1,7 +1,8 @@
 // Badge de confort, teinte déduite du libellé produit par le moteur :
-// « naturel » / « peu de demi-trous » → vert · « demi-trous poussés » → ambre · « hors plage » → rouge.
+// « naturel » / « peu de demi-trous » → vert · « demi-trous poussés » → ambre · « hors plage » → rouge
+// · « hors ambitus » → neutre (teinte slate, distincte des teintes de confort).
 
-type BadgeTone = "ok" | "warn" | "danger";
+type BadgeTone = "ok" | "warn" | "danger" | "out";
 
 function toneFor(label: string): BadgeTone {
   if (label === "demi-trous poussés") {
@@ -9,6 +10,9 @@ function toneFor(label: string): BadgeTone {
   }
   if (label === "hors plage") {
     return "danger";
+  }
+  if (label === "hors ambitus") {
+    return "out";
   }
   return "ok";
 }
