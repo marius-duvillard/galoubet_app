@@ -11,6 +11,7 @@ import {
   STAFF_BOTTOM_Y,
   STAFF_SPACING,
   accidentalSymbol,
+  keySignatureOf,
   ledgerLinesFor,
   midiToPosition,
   midiWithAccidental,
@@ -29,22 +30,25 @@ interface StaffProps {
   high?: number;
   onChange: (low?: number, high?: number) => void;
   written?: WrittenRange | null;
+  signaturePc?: number | null;
 }
 
 // Géométrie du viewBox : y de −44 (marge haut) à 158 (label sous la note la plus grave).
-// x 0…340 : notes réelles (pleines) à gauche, notes lues (creuses) à droite.
+// x 0…400 : armure après la clef, notes réelles (pleines) à gauche, notes lues (creuses) à droite.
 const VIEW_X = 0;
 const VIEW_Y = -44;
-const VIEW_W = 340;
+const VIEW_W = 400;
 const VIEW_H = 202;
 
 const POSITION_MIN = midiToPosition(48);
 const POSITION_MAX = midiToPosition(84);
 
-const LOW_X = 70;
-const HIGH_X = 150;
-const WRITTEN_LOW_X = 220;
-const WRITTEN_HIGH_X = 290;
+const SIGNATURE_X = 50;
+const SIGNATURE_STEP_X = 9;
+const LOW_X = 115;
+const HIGH_X = 190;
+const WRITTEN_LOW_X = 260;
+const WRITTEN_HIGH_X = 330;
 
 function capturePointer(event: PointerEvent<SVGSVGElement>): void {
   try {
@@ -153,7 +157,28 @@ function WrittenNote({ midi, x }: { midi: number; x: number }) {
   );
 }
 
-export function Staff({ low, high, onChange, written = null }: StaffProps) {
+function Signature({ pc }: { pc: number }) {
+  const accidentals = keySignatureOf(pc);
+  if (accidentals.length === 0) {
+    return null;
+  }
+  return (
+    <g className="staff__signature" aria-hidden="true">
+      {accidentals.map((acc, index) => (
+        <text
+          key={index}
+          className="staff__accidental"
+          x={SIGNATURE_X + index * SIGNATURE_STEP_X}
+          y={positionY(acc.step) + 5}
+        >
+          {acc.symbol}
+        </text>
+      ))}
+    </g>
+  );
+}
+
+export function Staff({ low, high, onChange, written = null, signaturePc = null }: StaffProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [drag, setDrag] = useState<null | "low" | "high">(null);
 
@@ -248,12 +273,13 @@ export function Staff({ low, high, onChange, written = null }: StaffProps) {
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
       >
-        <g className="staff__clef" transform={CLEF_TRANSFORM}>
-          <path d={CLEF_PATH} fillRule="evenodd" />
-        </g>
         {[0, 1, 2, 3, 4].map((line) => (
           <line key={line} className="staff__line" x1={0} x2={VIEW_W} y1={line * STAFF_SPACING} y2={line * STAFF_SPACING} />
         ))}
+        <g className="staff__clef" transform={CLEF_TRANSFORM}>
+          <path d={CLEF_PATH} fillRule="evenodd" />
+        </g>
+        {signaturePc !== null && <Signature pc={signaturePc} />}
         {low !== undefined && (
           <Note midi={low} x={LOW_X} ariaLabel="Note la plus grave" onMove={moveLow} onAccidental={(d) => moveLow(midiWithAccidentalShift(low, d))} />
         )}

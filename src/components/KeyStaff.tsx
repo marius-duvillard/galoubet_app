@@ -13,6 +13,7 @@ import {
   STAFF_BOTTOM_Y,
   STAFF_SPACING,
   accidentalSymbol,
+  keySignatureOf,
   ledgerLinesFor,
   midiToPosition,
   midiWithAccidental,
@@ -30,11 +31,13 @@ interface KeyStaffProps {
 
 const VIEW_X = 0;
 const VIEW_Y = -44;
-const VIEW_W = 340;
+const VIEW_W = 400;
 const VIEW_H = 202;
 
-const WRITTEN_X = 70;
-const REAL_X = 220;
+const SIGNATURE_X = 50;
+const SIGNATURE_STEP_X = 9;
+const WRITTEN_X = 135;
+const REAL_X = 260;
 
 const AMBITUS_LOW = 63;
 const AMBITUS_HIGH = 82;
@@ -155,12 +158,24 @@ export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
       >
-        <g className="staff__clef" transform={CLEF_TRANSFORM}>
-          <path d={CLEF_PATH} fillRule="evenodd" />
-        </g>
         {[0, 1, 2, 3, 4].map((line) => (
           <line key={line} className="staff__line" x1={0} x2={VIEW_W} y1={line * STAFF_SPACING} y2={line * STAFF_SPACING} />
         ))}
+        <g className="staff__clef" transform={CLEF_TRANSFORM}>
+          <path d={CLEF_PATH} fillRule="evenodd" />
+        </g>
+        <g className="staff__signature" aria-hidden="true">
+          {keySignatureOf(writtenPc).map((acc, index) => (
+            <text
+              key={index}
+              className="staff__accidental"
+              x={SIGNATURE_X + index * SIGNATURE_STEP_X}
+              y={positionY(acc.step) + 5}
+            >
+              {acc.symbol}
+            </text>
+          ))}
+        </g>
         <g
           className="staff__note"
           role="slider"

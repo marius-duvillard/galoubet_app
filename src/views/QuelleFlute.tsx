@@ -264,6 +264,8 @@ export function QuelleFlute({
     rangeSet && selected !== null
       ? { ...writtenRange(rangeLow, rangeHigh, selected), flute: selected }
       : null;
+  const signaturePc =
+    pick?.candidates.find((candidate) => candidate.flute === selected)?.writtenPc ?? null;
 
   return (
     <div className="view">
@@ -272,7 +274,13 @@ export function QuelleFlute({
       </FieldSection>
 
       <FieldSection id="f2-range" title="Étendue du morceau (son réel)">
-        <Staff low={rangeLow} high={rangeHigh} onChange={onRange} written={written} />
+        <Staff
+          low={rangeLow}
+          high={rangeHigh}
+          onChange={onRange}
+          written={written}
+          signaturePc={signaturePc}
+        />
         <RangeSelect low={rangeLow} high={rangeHigh} onChange={onRange} />
       </FieldSection>
 

@@ -3,6 +3,7 @@
 // Pure : aucun DOM, testable seul. Le rendu SVG est dans components/Staff.
 
 import { RANGE_MAX, RANGE_MIN } from "./ambitus";
+import { keyInfo } from "./transposition";
 
 /** Écart entre deux lignes de la portée, en unités du viewBox. */
 export const STAFF_SPACING = 16;
@@ -102,6 +103,26 @@ export function ledgerLinesFor(position: number): number[] {
 export function accidentalSymbol(midi: number): string | null {
   const acc = midiAccidental(midi);
   return acc < 0 ? "♭" : acc > 0 ? "♯" : null;
+}
+
+/**
+ * Positions d'armure en clef de Sol, en diatonique depuis E4 : ordre des
+ * bémols (Si Mi La Ré Sol Do Fa) puis des dièses (Fa Do Sol Ré La Mi Si).
+ */
+const FLAT_STEPS: readonly number[] = [4, 7, 3, 6, 9, 5, 8];
+const SHARP_STEPS: readonly number[] = [8, 5, 9, 6, 3, 7, 4];
+
+/** Accidentals d'armure d'une tonalité, dans l'ordre d'écriture. */
+export function keySignatureOf(
+  pc: number,
+): readonly { symbol: string; step: number }[] {
+  const info = keyInfo(pc);
+  if (info.accidentalType === "none") {
+    return [];
+  }
+  const steps = info.accidentalType === "flat" ? FLAT_STEPS : SHARP_STEPS;
+  const symbol = info.accidentalType === "flat" ? "♭" : "♯";
+  return steps.slice(0, info.accidentals).map((step) => ({ symbol, step }));
 }
 
 /**

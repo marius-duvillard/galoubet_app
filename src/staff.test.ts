@@ -10,6 +10,7 @@ import {
   midiWithAccidentalShift,
   positionToNaturalMidi,
   positionY,
+  keySignatureOf,
   realTonicMidi,
   tonicInAmbitus,
 } from "./staff";
@@ -168,7 +169,49 @@ describe("tonicInAmbitus / realTonicMidi", () => {
   });
 });
 
-// H) Géométrie
+// H) Armure (clef de Sol)
+describe("keySignatureOf", () => {
+  it("Do : aucune armure", () => {
+    expect(keySignatureOf(0)).toEqual([]);
+  });
+  it("Fa (pc 5) : 1 bémol à la 3ᵉ ligne (Si4, position 4)", () => {
+    expect(keySignatureOf(5)).toEqual([{ symbol: "♭", step: 4 }]);
+  });
+  it("Si♭ (pc 10) : 2 bémols Si4 puis Mi5", () => {
+    expect(keySignatureOf(10)).toEqual([
+      { symbol: "♭", step: 4 },
+      { symbol: "♭", step: 7 },
+    ]);
+  });
+  it("Mi♭ (pc 3) : 3 bémols Si4, Mi5, La4", () => {
+    expect(keySignatureOf(3)).toEqual([
+      { symbol: "♭", step: 4 },
+      { symbol: "♭", step: 7 },
+      { symbol: "♭", step: 3 },
+    ]);
+  });
+  it("Sol (pc 7) : 1 dièse en haut de la portée (Fa5, position 8)", () => {
+    expect(keySignatureOf(7)).toEqual([{ symbol: "♯", step: 8 }]);
+  });
+  it("Ré (pc 2) : 2 dièses Fa5 puis Do5", () => {
+    expect(keySignatureOf(2)).toEqual([
+      { symbol: "♯", step: 8 },
+      { symbol: "♯", step: 5 },
+    ]);
+  });
+  it("La (pc 9) : 3 dièses Fa5, Do5, Sol5", () => {
+    expect(keySignatureOf(9)).toEqual([
+      { symbol: "♯", step: 8 },
+      { symbol: "♯", step: 5 },
+      { symbol: "♯", step: 9 },
+    ]);
+  });
+  it("Do♯ (pc 1) : 7 dièses (toute la portée)", () => {
+    expect(keySignatureOf(1)).toHaveLength(7);
+  });
+});
+
+// I) Géométrie
 describe("positionY / clampMidi", () => {
   it("position 0 → y = 64 (ligne du bas), position 8 → y = 0 (ligne du haut)", () => {
     expect(positionY(0)).toBe(64);
