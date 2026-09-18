@@ -1,6 +1,7 @@
 // Carte de résultat : portée décorative (motif de partition), tonalité en serif
 // grande, badge de confort, ligne d'explication optionnelle.
 
+import type { KeyboardEvent } from "react";
 import { ComfortBadge } from "./ComfortBadge";
 
 interface ResultCardProps {
@@ -13,6 +14,8 @@ interface ResultCardProps {
   extraBadge?: string;
   note?: string;
   fallback?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
 export function ResultCard({
@@ -25,9 +28,32 @@ export function ResultCard({
   extraBadge,
   note,
   fallback = false,
+  selected = false,
+  onSelect,
 }: ResultCardProps) {
+  const interactive = onSelect !== undefined;
+  const classNames = [
+    "result",
+    fallback ? "result--fallback" : "",
+    selected ? "result--selected" : "",
+    interactive ? "result--selectable" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const keyDown = (event: KeyboardEvent<HTMLElement>): void => {
+    if (onSelect !== undefined && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      onSelect();
+    }
+  };
   return (
-    <section className={fallback ? "result result--fallback" : "result"} aria-labelledby={id}>
+    <section
+      className={classNames}
+      aria-labelledby={id}
+      {...(interactive
+        ? { role: "button", tabIndex: 0, "aria-pressed": selected, onClick: onSelect, onKeyDown: keyDown }
+        : {})}
+    >
       <div className="result__staff" aria-hidden="true" />
       <h2 className="result__overline" id={id}>
         {overline}

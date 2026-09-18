@@ -1,14 +1,17 @@
 // F2 « Quelle flûte ? » : tonalité réelle → meilleure configuration (galoubet + tonalité notée),
 // avec étendue du morceau optionnelle qui filtre les configurations tenables à l'ambitus.
+// Une configuration sélectionnée affiche sa lecture (notes lues) sur la portée.
 
-import { formatNote, pickWithRange } from "../ambitus";
-import type { RangeCandidate } from "../ambitus";
+import { useState } from "react";
+import { formatNote, pickWithRange, writtenRange } from "../ambitus";
+import type { PickResult, RangeCandidate } from "../ambitus";
 import { bestConfigs, formatKey, intervalLabel } from "../transposition";
 import type { Flute } from "../transposition";
 import { FieldSection } from "../components/FieldSection";
 import { KeyChipGrid } from "../components/KeyChipGrid";
 import { RangeSelect } from "../components/RangeSelect";
 import { Staff } from "../components/Staff";
+import type { WrittenRange } from "../components/Staff";
 import { ComfortBadge } from "../components/ComfortBadge";
 import { ResultCard } from "../components/ResultCard";
 
@@ -28,7 +31,49 @@ function sonnerNote(flute: Flute): string {
   return `Sonner ${intervalLabel(flute)}.`;
 }
 
-function RangeOptions({ options }: { options: readonly RangeCandidate[] }) {
+interface OptionProps {
+  option: RangeCandidate;
+  selected: boolean;
+  onSelect: () => void;
+}
+
+function RangeOption({ option, selected, onSelect }: OptionProps) {
+  return (
+    <li className="option">
+      <div
+        className={selected ? "option__row option__row--selected" : "option__row"}
+        role="button"
+        tabIndex={0}
+        aria-pressed={selected}
+        onClick={onSelect}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSelect();
+          }
+        }}
+      >
+        <div className="option__main">
+          <p className="option__flute">Galoubet en {option.flute}</p>
+          <p className="option__key">Noter en {formatKey(option.writtenPc)}</p>
+          <p className="option__range">{rangeLineOf(option)}</p>
+        </div>
+        <ComfortBadge small label={option.label} />
+        {!option.fitsRange && <ComfortBadge small label="hors ambitus" />}
+      </div>
+    </li>
+  );
+}
+
+function RangeOptions({
+  options,
+  selected,
+  onSelect,
+}: {
+  options: readonly RangeCandidate[];
+  selected: Flute | null;
+  onSelect: (flute: Flute) => void;
+}) {
   if (options.length === 0) {
     return null;
   }
@@ -39,15 +84,12 @@ function RangeOptions({ options }: { options: readonly RangeCandidate[] }) {
       </h2>
       <ul className="options">
         {options.map((option) => (
-          <li key={option.flute} className="option">
-            <div className="option__main">
-              <p className="option__flute">Galoubet en {option.flute}</p>
-              <p className="option__key">Noter en {formatKey(option.writtenPc)}</p>
-              <p className="option__range">{rangeLineOf(option)}</p>
-            </div>
-            <ComfortBadge small label={option.label} />
-            {!option.fitsRange && <ComfortBadge small label="hors ambitus" />}
-          </li>
+          <RangeOption
+            key={option.flute}
+            option={option}
+            selected={selected === option.flute}
+            onSelect={() => onSelect(option.flute)}
+          />
         ))}
       </ul>
     </section>
@@ -55,15 +97,15 @@ function RangeOptions({ options }: { options: readonly RangeCandidate[] }) {
 }
 
 function RangeResults({
-  realPc,
-  low,
-  high,
+  pick,
+  selected,
+  onSelect,
 }: {
-  realPc: number;
-  low: number;
-  high: number;
+  pick: PickResult;
+  selected: Flute | null;
+  onSelect: (flute: Flute) => void;
 }) {
-  const { candidates, primary, noneFits, fallback } = pickWithRange(realPc, low, high);
+  const { candidates, primary, noneFits, fallback } = pick;
 
   if (primary !== null) {
     return (
@@ -76,8 +118,10 @@ function RangeResults({
           rangeLine={rangeLineOf(primary)}
           badgeLabel={primary.label}
           note={sonnerNote(primary.flute)}
+          selected={selected === primary.flute}
+          onSelect={() => onSelect(primary.flute)}
         />
-        <RangeOptions options={candidates.slice(1)} />
+        <RangeOptions options={candidates.slice(1)} selected={selected} onSelect={onSelect} />
       </>
     );
   }
@@ -98,8 +142,10 @@ function RangeResults({
           badgeLabel={first.label}
           extraBadge="hors ambitus"
           note={sonnerNote(first.flute)}
+          selected={selected === first.flute}
+          onSelect={() => onSelect(first.flute)}
         />
-        <RangeOptions options={rest} />
+        <RangeOptions options={rest} selected={selected} onSelect={onSelect} />
       </>
     );
   }
@@ -120,6 +166,8 @@ function RangeResults({
           extraBadge={fallback.fitsRange ? undefined : "hors ambitus"}
           note={sonnerNote(fallback.flute)}
           fallback
+          selected={selected === fallback.flute}
+          onSelect={() => onSelect(fallback.flute)}
         />
       </>
     );
@@ -202,7 +250,20 @@ export function QuelleFlute({
   rangeHigh,
   onRange,
 }: QuelleFluteProps) {
+  const [selectedFlute, setSelectedFlute] = useState<Flute | null>(null);
   const rangeSet = rangeLow !== undefined && rangeHigh !== undefined;
+  const pick = rangeSet ? pickWithRange(realPc, rangeLow, rangeHigh) : null;
+  const selected =
+    pick === null
+      ? null
+      : (pick.candidates.find((candidate) => candidate.flute === selectedFlute)?.flute ??
+        pick.primary?.flute ??
+        pick.candidates[0]?.flute ??
+        null);
+  const written: WrittenRange | null =
+    rangeSet && selected !== null
+      ? { ...writtenRange(rangeLow, rangeHigh, selected), flute: selected }
+      : null;
 
   return (
     <div className="view">
@@ -211,12 +272,12 @@ export function QuelleFlute({
       </FieldSection>
 
       <FieldSection id="f2-range" title="Étendue du morceau (son réel)">
-        <Staff low={rangeLow} high={rangeHigh} onChange={onRange} />
+        <Staff low={rangeLow} high={rangeHigh} onChange={onRange} written={written} />
         <RangeSelect low={rangeLow} high={rangeHigh} onChange={onRange} />
       </FieldSection>
 
-      {rangeSet ? (
-        <RangeResults realPc={realPc} low={rangeLow} high={rangeHigh} />
+      {pick !== null ? (
+        <RangeResults pick={pick} selected={selected} onSelect={setSelectedFlute} />
       ) : (
         <ComfortResults realPc={realPc} />
       )}

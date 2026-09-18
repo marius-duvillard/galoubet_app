@@ -16,23 +16,33 @@ import {
   positionY,
 } from "../staff";
 
+export interface WrittenRange {
+  low: number;
+  high: number;
+  flute: string;
+}
+
 interface StaffProps {
   low?: number;
   high?: number;
   onChange: (low?: number, high?: number) => void;
+  written?: WrittenRange | null;
 }
 
 // Géométrie du viewBox : y de −44 (marge haut) à 158 (label sous la note la plus grave).
+// x 0…340 : notes réelles (pleines) à gauche, notes lues (creuses) à droite.
 const VIEW_X = 0;
 const VIEW_Y = -44;
-const VIEW_W = 260;
+const VIEW_W = 340;
 const VIEW_H = 202;
 
 const POSITION_MIN = midiToPosition(48);
 const POSITION_MAX = midiToPosition(84);
 
-const LOW_X = 80;
-const HIGH_X = 170;
+const LOW_X = 70;
+const HIGH_X = 150;
+const WRITTEN_LOW_X = 220;
+const WRITTEN_HIGH_X = 290;
 
 // Clef de Sol domaine public (Wikimedia « Treble clef.svg »), transformée
 // pour que la spirale s'enroule sur la 2ᵉ ligne (Sol4) et que la portée
@@ -115,9 +125,55 @@ function Note({
   );
 }
 
-export function Staff({ low, high, onChange }: StaffProps) {
+function WrittenNote({ midi, x }: { midi: number; x: number }) {
+  const position = midiToPosition(midi);
+  const y = positionY(position);
+  const acc = accidentalSymbol(midi);
+  const stemUp = position < 4;
+  const stemX = stemUp ? x + 5.3 : x - 5.3;
+  const stemY1 = stemUp ? y - 2.4 : y + 2.4;
+  const stemY2 = stemUp ? y - 56 : y + 56;
+  return (
+    <g className="staff__written">
+      {ledgerLinesFor(position).map((line) => (
+        <line
+          key={line}
+          className="staff__ledger"
+          x1={x - 15}
+          x2={x + 15}
+          y1={positionY(line)}
+          y2={positionY(line)}
+        />
+      ))}
+      {acc !== null && (
+        <text className="staff__accidental" x={x - 17} y={y + 5}>
+          {acc}
+        </text>
+      )}
+      <ellipse className="staff__head" cx={x} cy={y} rx={5.6} ry={4} transform={`rotate(-15 ${x} ${y})`} />
+      <line className="staff__stem" x1={stemX} y1={stemY1} x2={stemX} y2={stemY2} />
+      <text className="staff__label" x={x + 16} y={y + 4}>
+        {formatNote(midi)}
+      </text>
+    </g>
+  );
+}
+
+export function Staff({ low, high, onChange, written = null }: StaffProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [drag, setDrag] = useState<null | "low" | "high">(null);
+
+  // la lecture d'une flûte peut dépasser la portée (ex. Sol : +5) : on étend
+  // la viewBox vers le haut pour que la note creuse reste visible
+  const writtenTop =
+    written === null
+      ? VIEW_Y
+      : Math.min(
+          positionY(midiToPosition(written.low)),
+          positionY(midiToPosition(written.high)),
+        ) - 12;
+  const viewTop = Math.min(VIEW_Y, writtenTop);
+  const viewHeight = VIEW_H + (VIEW_Y - viewTop);
 
   const moveLow = (midi: number): void => {
     if (high === undefined) onChange(midi, undefined);
@@ -134,7 +190,7 @@ export function Staff({ low, high, onChange }: StaffProps) {
     const rect = svg.getBoundingClientRect();
     return {
       x: ((event.clientX - rect.left) / rect.width) * VIEW_W,
-      y: VIEW_Y + ((event.clientY - rect.top) / rect.height) * VIEW_H,
+      y: viewTop + ((event.clientY - rect.top) / rect.height) * viewHeight,
     };
   };
 
@@ -155,6 +211,7 @@ export function Staff({ low, high, onChange }: StaffProps) {
       return;
     }
     const { x } = viewBoxFromEvent(event);
+    if (written !== null && x > (HIGH_X + WRITTEN_LOW_X) / 2) return;
     const target =
       low !== undefined && high !== undefined
         ? Math.abs(x - LOW_X) <= Math.abs(x - HIGH_X)
@@ -189,7 +246,7 @@ export function Staff({ low, high, onChange }: StaffProps) {
       <svg
         ref={svgRef}
         className="staff__svg"
-        viewBox={`${VIEW_X} ${VIEW_Y} ${VIEW_W} ${VIEW_H}`}
+        viewBox={`${VIEW_X} ${viewTop} ${VIEW_W} ${viewHeight}`}
         role="group"
         aria-label="Étendue du morceau sur la portée"
         onPointerDown={onPointerDown}
@@ -217,7 +274,21 @@ export function Staff({ low, high, onChange }: StaffProps) {
             </text>
           </g>
         )}
+        {written !== null && (
+          <g role="img" aria-label={`Notes lues par le galoubet en ${written.flute} : ${formatNote(written.low)} → ${formatNote(written.high)}`}>
+            <WrittenNote midi={written.low} x={WRITTEN_LOW_X} />
+            <WrittenNote midi={written.high} x={WRITTEN_HIGH_X} />
+          </g>
+        )}
       </svg>
+      {written !== null && (
+        <p className="staff__legend">
+          <span className="staff__legend-dot staff__legend-dot--real" aria-hidden="true" />
+          Son réel
+          <span className="staff__legend-dot staff__legend-dot--written" aria-hidden="true" />
+          Lu — galoubet en {written.flute}
+        </p>
+      )}
     </div>
   );
 }
