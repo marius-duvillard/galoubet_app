@@ -170,7 +170,7 @@ describe("D) round-trip", () => {
 
 const KEY_INFO_EXPECTED: [string, "none" | "sharp" | "flat", number][] = [
   ["Do", "none", 0],
-  ["Do♯", "sharp", 1],
+  ["Do♯", "sharp", 7],
   ["Ré", "sharp", 2],
   ["Mi♭", "flat", 3],
   ["Mi", "sharp", 4],
@@ -196,7 +196,7 @@ describe("E) keyInfo", () => {
 
 const FORMAT_KEY_EXPECTED = [
   "Do majeur",
-  "Do♯ majeur · 1 dièse",
+  "Do♯ majeur · 7 dièses",
   "Ré majeur · 2 dièses",
   "Mi♭ majeur · 3 bémols",
   "Mi majeur · 4 dièses",
@@ -278,7 +278,7 @@ describe("I) CHIP_KEYS", () => {
 // J) signatureLabel
 
 const SIGNATURE_LABELS = [
-  "♮", "1♯", "2♯", "3♭", "4♯", "1♭", "6♯", "1♯", "4♭", "3♯", "2♭", "5♯",
+  "♮", "7♯", "2♯", "3♭", "4♯", "1♭", "6♯", "1♯", "4♭", "3♯", "2♭", "5♯",
 ];
 
 describe("J) signatureLabel", () => {

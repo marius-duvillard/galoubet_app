@@ -51,7 +51,7 @@ export interface KeyInfo {
 
 const KEY_INFO_TABLE: readonly KeyInfo[] = [
   { pc: 0, name: "Do", accidentalType: "none", accidentals: 0 },
-  { pc: 1, name: "Do♯", accidentalType: "sharp", accidentals: 1 },
+  { pc: 1, name: "Do♯", accidentalType: "sharp", accidentals: 7 },
   { pc: 2, name: "Ré", accidentalType: "sharp", accidentals: 2 },
   { pc: 3, name: "Mi♭", accidentalType: "flat", accidentals: 3 },
   { pc: 4, name: "Mi", accidentalType: "sharp", accidentals: 4 },
