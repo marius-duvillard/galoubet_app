@@ -20,8 +20,11 @@ import {
   midiWithAccidentalShift,
   positionY,
   realTonicMidi,
+  staffLayout,
   tonicInAmbitus,
 } from "../staff";
+import { Signature } from "./Signature";
+
 
 interface KeyStaffProps {
   writtenPc: number;
@@ -31,13 +34,7 @@ interface KeyStaffProps {
 
 const VIEW_X = 0;
 const VIEW_Y = -44;
-const VIEW_W = 400;
 const VIEW_H = 202;
-
-const SIGNATURE_X = 50;
-const SIGNATURE_STEP_X = 9;
-const WRITTEN_X = 135;
-const REAL_X = 260;
 
 const AMBITUS_LOW = 63;
 const AMBITUS_HIGH = 82;
@@ -93,7 +90,15 @@ export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
   const [dragging, setDragging] = useState(false);
 
   const writtenMidi = tonicInAmbitus(writtenPc);
-  const realMidi = realTonicMidi(writtenMidi, FLUTE_INTERVAL[flute]);
+  const interval = FLUTE_INTERVAL[flute];
+  const realMidi = realTonicMidi(writtenMidi, interval);
+  const realPc = ((writtenPc + interval) % 12 + 12) % 12;
+
+  const { group1, group2, viewWidth } = staffLayout(
+    keySignatureOf(writtenPc).length,
+    keySignatureOf(realPc).length,
+    1,
+  );
 
   const positionFromEvent = (event: PointerEvent<SVGSVGElement>): number => {
     const svg = svgRef.current;
@@ -113,8 +118,8 @@ export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
     const svg = svgRef.current;
     if (svg === null) return;
     const rect = svg.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * VIEW_W;
-    if (x > (WRITTEN_X + REAL_X) / 2) return;
+    const x = ((event.clientX - rect.left) / rect.width) * viewWidth;
+    if (x > (group1.endX + group2.signatureX) / 2) return;
     setDragging(true);
     moveTo(positionFromEvent(event));
     try {
@@ -150,7 +155,7 @@ export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
       <svg
         ref={svgRef}
         className="staff__svg"
-        viewBox={`${VIEW_X} ${VIEW_Y} ${VIEW_W} ${VIEW_H}`}
+        viewBox={`${VIEW_X} ${VIEW_Y} ${viewWidth} ${VIEW_H}`}
         role="group"
         aria-label="Tonalité sur la portée"
         onPointerDown={onPointerDown}
@@ -159,23 +164,12 @@ export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
         onPointerCancel={endDrag}
       >
         {[0, 1, 2, 3, 4].map((line) => (
-          <line key={line} className="staff__line" x1={0} x2={VIEW_W} y1={line * STAFF_SPACING} y2={line * STAFF_SPACING} />
+          <line key={line} className="staff__line" x1={0} x2={viewWidth} y1={line * STAFF_SPACING} y2={line * STAFF_SPACING} />
         ))}
         <g className="staff__clef" transform={CLEF_TRANSFORM}>
           <path d={CLEF_PATH} fillRule="evenodd" />
         </g>
-        <g className="staff__signature" aria-hidden="true">
-          {keySignatureOf(writtenPc).map((acc, index) => (
-            <text
-              key={index}
-              className="staff__accidental"
-              x={SIGNATURE_X + index * SIGNATURE_STEP_X}
-              y={positionY(acc.step) + 5}
-            >
-              {acc.symbol}
-            </text>
-          ))}
-        </g>
+        <Signature pc={writtenPc} at={group1.signatureX} />
         <g
           className="staff__note"
           role="slider"
@@ -187,10 +181,11 @@ export function KeyStaff({ writtenPc, flute, onWrittenPc }: KeyStaffProps) {
           aria-valuetext={formatNote(writtenMidi)}
           onKeyDown={keyDown}
         >
-          <NoteShape midi={writtenMidi} x={WRITTEN_X} hollow={false} />
+          <NoteShape midi={writtenMidi} x={group1.note1X} hollow={false} />
         </g>
         <g role="img" aria-label={`Son réel : ${formatNote(realMidi)}`}>
-          <NoteShape midi={realMidi} x={REAL_X} hollow />
+          <Signature pc={realPc} at={group2.signatureX} written />
+          <NoteShape midi={realMidi} x={group2.note1X} hollow />
         </g>
       </svg>
       <p className="staff__legend">

@@ -1,5 +1,6 @@
 // Portée d'étendue (clef de Sol) : deux notes (grave / aiguë) en son réel,
 // déplaçables au pointeur (tactis + souris) et au clavier (flèches).
+// Chaque groupe (réel / lu) porte son armure, dans sa couleur.
 // Les sélecteurs <select> de RangeSelect restent le repli accessible.
 
 import { useRef, useState } from "react";
@@ -17,7 +18,9 @@ import {
   midiWithAccidental,
   midiWithAccidentalShift,
   positionY,
+  staffLayout,
 } from "../staff";
+import { Signature } from "./Signature";
 
 export interface WrittenRange {
   low: number;
@@ -31,24 +34,17 @@ interface StaffProps {
   onChange: (low?: number, high?: number) => void;
   written?: WrittenRange | null;
   signaturePc?: number | null;
+  writtenSignaturePc?: number | null;
 }
 
 // Géométrie du viewBox : y de −44 (marge haut) à 158 (label sous la note la plus grave).
-// x 0…400 : armure après la clef, notes réelles (pleines) à gauche, notes lues (creuses) à droite.
+// x : clef, puis groupe 1 (armure + notes réelles pleines), groupe 2 (armure + notes lues creuses).
 const VIEW_X = 0;
 const VIEW_Y = -44;
-const VIEW_W = 400;
 const VIEW_H = 202;
 
 const POSITION_MIN = midiToPosition(48);
 const POSITION_MAX = midiToPosition(84);
-
-const SIGNATURE_X = 50;
-const SIGNATURE_STEP_X = 9;
-const LOW_X = 115;
-const HIGH_X = 190;
-const WRITTEN_LOW_X = 260;
-const WRITTEN_HIGH_X = 330;
 
 function capturePointer(event: PointerEvent<SVGSVGElement>): void {
   try {
@@ -157,30 +153,22 @@ function WrittenNote({ midi, x }: { midi: number; x: number }) {
   );
 }
 
-function Signature({ pc }: { pc: number }) {
-  const accidentals = keySignatureOf(pc);
-  if (accidentals.length === 0) {
-    return null;
-  }
-  return (
-    <g className="staff__signature" aria-hidden="true">
-      {accidentals.map((acc, index) => (
-        <text
-          key={index}
-          className="staff__accidental"
-          x={SIGNATURE_X + index * SIGNATURE_STEP_X}
-          y={positionY(acc.step) + 5}
-        >
-          {acc.symbol}
-        </text>
-      ))}
-    </g>
-  );
-}
-
-export function Staff({ low, high, onChange, written = null, signaturePc = null }: StaffProps) {
+export function Staff({
+  low,
+  high,
+  onChange,
+  written = null,
+  signaturePc = null,
+  writtenSignaturePc = null,
+}: StaffProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [drag, setDrag] = useState<null | "low" | "high">(null);
+
+  const { group1, group2, viewWidth } = staffLayout(
+    signaturePc === null ? 0 : keySignatureOf(signaturePc).length,
+    writtenSignaturePc === null ? 0 : keySignatureOf(writtenSignaturePc).length,
+    2,
+  );
 
   // la lecture d'une flûte peut dépasser la portée (ex. Sol : +5) : on étend
   // la viewBox vers le haut pour que la note creuse reste visible
@@ -208,7 +196,7 @@ export function Staff({ low, high, onChange, written = null, signaturePc = null 
     if (svg === null) return { x: 0, y: 0 };
     const rect = svg.getBoundingClientRect();
     return {
-      x: ((event.clientX - rect.left) / rect.width) * VIEW_W,
+      x: ((event.clientX - rect.left) / rect.width) * viewWidth,
       y: viewTop + ((event.clientY - rect.top) / rect.height) * viewHeight,
     };
   };
@@ -230,10 +218,10 @@ export function Staff({ low, high, onChange, written = null, signaturePc = null 
       return;
     }
     const { x } = viewBoxFromEvent(event);
-    if (written !== null && x > (HIGH_X + WRITTEN_LOW_X) / 2) return;
+    if (written !== null && x > (group1.endX + group2.signatureX) / 2) return;
     const target =
       low !== undefined && high !== undefined
-        ? Math.abs(x - LOW_X) <= Math.abs(x - HIGH_X)
+        ? Math.abs(x - group1.note1X) <= Math.abs(x - group1.note2X!)
           ? "low"
           : "high"
         : low !== undefined
@@ -265,7 +253,7 @@ export function Staff({ low, high, onChange, written = null, signaturePc = null 
       <svg
         ref={svgRef}
         className="staff__svg"
-        viewBox={`${VIEW_X} ${viewTop} ${VIEW_W} ${viewHeight}`}
+        viewBox={`${VIEW_X} ${viewTop} ${viewWidth} ${viewHeight}`}
         role="group"
         aria-label="Étendue du morceau sur la portée"
         onPointerDown={onPointerDown}
@@ -274,30 +262,31 @@ export function Staff({ low, high, onChange, written = null, signaturePc = null 
         onPointerCancel={endDrag}
       >
         {[0, 1, 2, 3, 4].map((line) => (
-          <line key={line} className="staff__line" x1={0} x2={VIEW_W} y1={line * STAFF_SPACING} y2={line * STAFF_SPACING} />
+          <line key={line} className="staff__line" x1={0} x2={viewWidth} y1={line * STAFF_SPACING} y2={line * STAFF_SPACING} />
         ))}
         <g className="staff__clef" transform={CLEF_TRANSFORM}>
           <path d={CLEF_PATH} fillRule="evenodd" />
         </g>
-        {signaturePc !== null && <Signature pc={signaturePc} />}
+        {signaturePc !== null && <Signature pc={signaturePc} at={group1.signatureX} />}
         {low !== undefined && (
-          <Note midi={low} x={LOW_X} ariaLabel="Note la plus grave" onMove={moveLow} onAccidental={(d) => moveLow(midiWithAccidentalShift(low, d))} />
+          <Note midi={low} x={group1.note1X} ariaLabel="Note la plus grave" onMove={moveLow} onAccidental={(d) => moveLow(midiWithAccidentalShift(low, d))} />
         )}
         {high !== undefined && (
-          <Note midi={high} x={HIGH_X} ariaLabel="Note la plus aiguë" onMove={moveHigh} onAccidental={(d) => moveHigh(midiWithAccidentalShift(high, d))} />
+          <Note midi={high} x={group1.note2X!} ariaLabel="Note la plus aiguë" onMove={moveHigh} onAccidental={(d) => moveHigh(midiWithAccidentalShift(high, d))} />
         )}
         {low === undefined && high === undefined && (
           <g className="staff__ghost">
-            <ellipse cx={LOW_X} cy={positionY(2)} rx={5.6} ry={4} />
-            <text className="staff__hint" x={VIEW_W / 2} y={120}>
+            <ellipse cx={group1.note1X} cy={positionY(2)} rx={5.6} ry={4} />
+            <text className="staff__hint" x={viewWidth / 2} y={120}>
               Touchez la portée pour poser l’étendue
             </text>
           </g>
         )}
         {written !== null && (
           <g role="img" aria-label={`Notes lues par le galoubet en ${written.flute} : ${formatNote(written.low)} → ${formatNote(written.high)}`}>
-            <WrittenNote midi={written.low} x={WRITTEN_LOW_X} />
-            <WrittenNote midi={written.high} x={WRITTEN_HIGH_X} />
+            {writtenSignaturePc !== null && <Signature pc={writtenSignaturePc} at={group2.signatureX} written />}
+            <WrittenNote midi={written.low} x={group2.note1X} />
+            <WrittenNote midi={written.high} x={group2.note2X!} />
           </g>
         )}
       </svg>

@@ -264,7 +264,7 @@ export function QuelleFlute({
     rangeSet && selected !== null
       ? { ...writtenRange(rangeLow, rangeHigh, selected), flute: selected }
       : null;
-  const signaturePc =
+  const writtenSignaturePc =
     pick?.candidates.find((candidate) => candidate.flute === selected)?.writtenPc ?? null;
 
   return (
@@ -279,7 +279,8 @@ export function QuelleFlute({
           high={rangeHigh}
           onChange={onRange}
           written={written}
-          signaturePc={signaturePc}
+          signaturePc={realPc}
+          writtenSignaturePc={writtenSignaturePc}
         />
         <RangeSelect low={rangeLow} high={rangeHigh} onChange={onRange} />
       </FieldSection>

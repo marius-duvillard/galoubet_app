@@ -106,6 +106,55 @@ export function accidentalSymbol(midi: number): string | null {
 }
 
 /**
+ * Layout d'un groupe (armure + notes) : la position de la note dépend de la
+ * largeur de l'armure, pour que les deux restent côte à côte sans se toucher.
+ */
+export interface StaffGroup {
+  signatureX: number;
+  note1X: number;
+  note2X: number | null;
+  endX: number;
+}
+
+const SIG_START = 48;
+const SIG_STEP = 9;
+const SIG_NOTE_GAP = 24;
+const NOTE_GAP = 75;
+const GROUP_GAP = 34;
+const LABEL_ROOM = 48;
+
+export function staffGroupLayout(
+  sigCount: number,
+  noteCount: number,
+  startAt: number,
+): StaffGroup {
+  const sigWidth = sigCount * SIG_STEP;
+  const note1X = startAt + sigWidth + SIG_NOTE_GAP;
+  const note2X = noteCount > 1 ? note1X + NOTE_GAP : null;
+  return {
+    signatureX: startAt,
+    note1X,
+    note2X,
+    endX: (note2X ?? note1X) + LABEL_ROOM,
+  };
+}
+
+/** Deux groupes côte à côte ; VIEW_W = max(340, fin du groupe 2 + 10). */
+export function staffLayout(
+  sig1Count: number,
+  sig2Count: number,
+  notesPerGroup: number,
+): { group1: StaffGroup; group2: StaffGroup; viewWidth: number } {
+  const group1 = staffGroupLayout(sig1Count, notesPerGroup, SIG_START);
+  const group2 = staffGroupLayout(sig2Count, notesPerGroup, group1.endX + GROUP_GAP);
+  return {
+    group1,
+    group2,
+    viewWidth: Math.max(340, group2.endX + 10),
+  };
+}
+
+/**
  * Positions d'armure en clef de Sol, en diatonique depuis E4 : ordre des
  * bémols (Si Mi La Ré Sol Do Fa) puis des dièses (Fa Do Sol Ré La Mi Si).
  */

@@ -537,7 +537,8 @@ body {
 }
 
 .staff__written .staff__accidental,
-.staff__written .staff__label {
+.staff__written .staff__label,
+.staff__signature--written .staff__accidental {
   fill: var(--accent);
 }
 
