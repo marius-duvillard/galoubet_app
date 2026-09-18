@@ -15,6 +15,10 @@ import {
   sharpsOf,
   writtenTone,
 } from "./transposition";
+// Import par namespace pour les sections J/K : le fichier doit rester
+// collectable tant que signatureLabel / intervalLabel ne sont pas exportés
+// (les sections A–I continuent de passer ; J/K échouent à l'appel).
+import * as transposition from "./transposition";
 
 // A) Constantes des flûtes
 
@@ -269,4 +273,42 @@ describe("I) CHIP_KEYS", () => {
       0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
     ]);
   });
+});
+
+// J) signatureLabel
+
+const SIGNATURE_LABELS = [
+  "♮", "1♯", "2♯", "3♭", "4♯", "1♭", "6♯", "1♯", "4♭", "3♯", "2♭", "5♯",
+];
+
+describe("J) signatureLabel", () => {
+  for (let pc = 0; pc < 12; pc++) {
+    it(`signatureLabel(${pc})`, () => {
+      expect(transposition.signatureLabel(pc)).toBe(SIGNATURE_LABELS[pc]);
+    });
+  }
+
+  it("robuste mod 12 (pc + 12 ≡ pc)", () => {
+    for (let pc = 0; pc < 12; pc++) {
+      expect(transposition.signatureLabel(pc + 12)).toBe(SIGNATURE_LABELS[pc]);
+    }
+  });
+});
+
+// K) intervalLabel
+
+const INTERVAL_LABELS: [Flute, string][] = [
+  ["Ut", "à l'unisson"],
+  ["Si", "une 2de mineure plus bas"],
+  ["Si♭", "une 2de majeure plus bas"],
+  ["La", "une 3ce mineure plus bas"],
+  ["Sol", "une 4te juste plus bas"],
+];
+
+describe("K) intervalLabel", () => {
+  for (const [flute, label] of INTERVAL_LABELS) {
+    it(`intervalLabel(${flute})`, () => {
+      expect(transposition.intervalLabel(flute)).toBe(label);
+    });
+  }
 });
