@@ -34,8 +34,14 @@ hors plage est signalée explicitement.
   plus aiguë, entre Do3 et Do6) : soit en touchant/déplaçant les notes sur la
   portée (souris ou tactile), soit via les sélecteurs (repli) ; les flûtes
   dont la lecture tient dans l'ambitus du galoubet sont proposées en premier.
-- Une configuration dont la lecture ne tient pas dans l'ambitus porte le
-  badge « hors ambitus ».
+- Une configuration dont la lecture ne tient qu'une octave plus bas (ou plus
+  haut) porte le badge « octave plus bas » / « octave plus haut » (indigo) :
+  la lecture affichée est alors la lecture décalée, et le morceau sonne une
+  octave plus loin du son réel saisi. Le badge « hors ambitus » ne reste que
+  pour une lecture qui ne tient à aucune octave.
+- Quand aucune configuration ne tient, même à l'octave, le message le dit
+  explicitement : « Aucune configuration ne couvre l'étendue du morceau,
+  même à l'octave. ».
 - En saisie d'étendue, la portée affiche aussi la lecture de la
   configuration sélectionnée (notes creuses à droite) : cliquer une carte
   ou une option change la lecture affichée.
@@ -63,6 +69,12 @@ de la portée) à Si♭5 (MIDI 82, au-dessus de la portée), inclus. L'étendue 
 morceau se saisit en son réel, note la plus grave et note la plus aiguë
 choisies entre Do3 (MIDI 48) et Do6 (MIDI 84).
 
+L'étendue notée est testée dans [63, 82] avec un décalage d'octave facultatif,
+essayé dans l'ordre 0, −12, +12 (le 0 est préféré à égalité) ; au plus un des
+deux décalages ±12 peut tenir. Une étendue plus large que l'ambitus
+(19 demi-tons) ne tient jamais, et il en va de même dans la bande où aucun
+décalage ne sait la placer : notée grave ≤ 62 et notée aiguë ≥ 71.
+
 Plage confortable : une tonique notée est confortable entre 0 et 3 bémols,
 c'est-à-dire Do majeur (0), Fa majeur (1 bémol), Si♭ majeur (2 bémols) et
 Mi♭ majeur (3 bémols).
@@ -74,12 +86,19 @@ Distance de confort : `d = |bémols - 2|`, distance à Si♭ majeur :
 - `d = 2` : « demi-trous poussés »
 - `d >= 3` : « hors plage »
 
-Tri des configurations : les candidats sont classés par distance d, puis par
-fréquence d'usage du galoubet (Si le plus courant, puis Si♭, La, Sol, Ut).
+Tri des configurations : en saisie d'étendue, les candidats sont classés par
+quatre clés, dans l'ordre (tient, tient à la hauteur réelle, distance d,
+fréquence d'usage du galoubet : Si le plus courant, puis Si♭, La, Sol, Ut).
+Sans étendue saisie, seules les deux dernières clés interviennent. Conséquence
+du tri complet : un candidat qui tient à la hauteur réelle passe devant un
+candidat qui ne tient qu'à l'octave, même avec un confort d moins bon.
 
 Cas particulier : en Fa♯ majeur réel, aucune configuration ne tombe dans la
 plage. L'application signale alors une solution de repli (galoubet en Si,
-notation en Sol majeur, 1 dièse), marquée « hors plage ».
+notation en Sol majeur, 1 dièse), marquée « hors plage ». Le mécanisme de
+repli est inchangé avec l'étendue : la carte de repli porte elle aussi le
+badge d'octave quand sa lecture tient à l'octave, mais elle ne devient jamais
+la configuration principale.
 
 Nommage des tonalités : nom de la tonique + nombre d'accidents, par exemple
 « Si♭ majeur · 2 bémols ». Do majeur, seul sans accident, s'affiche « Do
@@ -92,7 +111,7 @@ npm install        # dépendances
 npm run dev        # serveur de développement (Vite)
 npm run build      # typecheck + build de production dans dist/
 npm run preview    # servir dist/ en local
-npm test           # 203 tests vitest (moteur 92 · portée 51 · ambitus 31
+npm test           # 228 tests vitest (moteur 92 · portée 51 · ambitus 56
                    # · stockage 26 · service worker 3)
 npm run typecheck  # vérification TypeScript (tsc --noEmit)
 ```
@@ -165,8 +184,9 @@ rafraîchissement du cache chez les utilisateurs installés.
 - `src/transposition.ts` : moteur de transposition pur, sans dépendance et
   sans DOM. 100 % testé (tests dans `src/transposition.test.ts`).
 - `src/ambitus.ts` : module pur de l'ambitus du galoubet (`formatNote`,
-  `writtenRange`, `fitsAmbitus`, `pickWithRange`), sans DOM, dépend
-  uniquement de `src/transposition.ts`.
+  `writtenRange`, `fitsAmbitus`, `octaveShiftToFit`, `octaveLabel`,
+  `type OctaveShift`, `pickWithRange`), sans DOM, dépend uniquement de
+  `src/transposition.ts`.
 - `src/staff.ts` : géométrie de la portée, pure et sans DOM. Fait la
   correspondance MIDI ↔ position verticale (`midiToPosition`,
   `positionToNaturalMidi`, `positionY`), les lignes supplémentaires
