@@ -15,6 +15,8 @@ export interface Range {
 
 export interface AppState {
   tab: Tab;
+  /** Faux tant que l'aide d'installation n'a pas été fermée une première fois. */
+  helpSeen: boolean;
   f1: { writtenPc: number; flute: Flute; noteMidi: number };
   f2: { realPc: number; rangeLow?: number; rangeHigh?: number };
 }
@@ -26,6 +28,7 @@ export const DEFAULT_NOTE_MIDI = 67;
 
 export const DEFAULT_STATE: AppState = {
   tab: "f1",
+  helpSeen: false,
   f1: { writtenPc: 10, flute: "Si", noteMidi: DEFAULT_NOTE_MIDI },
   f2: { realPc: 9 },
 };
@@ -92,6 +95,10 @@ export function parseState(text: string | null): AppState {
 
   const tab: Tab = record.tab === "f2" ? "f2" : record.tab === "f1" ? "f1" : DEFAULT_STATE.tab;
 
+  // Tolérant : seul `true` strict est retenu. Un payload v1 (sans la clé), un
+  // non-booléen ou une absence remettent l'aide en avant, jamais un état faux.
+  const helpSeen = record.helpSeen === true;
+
   const f1Raw = asRecord(record.f1);
   const writtenPc =
     f1Raw !== null && isPc(f1Raw.writtenPc) ? f1Raw.writtenPc : DEFAULT_STATE.f1.writtenPc;
@@ -107,7 +114,7 @@ export function parseState(text: string | null): AppState {
   const f2: AppState["f2"] =
     range === null ? { realPc } : { realPc, rangeLow: range.rangeLow, rangeHigh: range.rangeHigh };
 
-  return { tab, f1: { writtenPc, flute, noteMidi }, f2 };
+  return { tab, helpSeen, f1: { writtenPc, flute, noteMidi }, f2 };
 }
 
 export function loadState(): AppState {

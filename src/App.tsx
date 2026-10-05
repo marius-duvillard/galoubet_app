@@ -4,6 +4,7 @@ import type { AppState, Tab } from "./storage";
 import { StaffMark } from "./components/StaffMark";
 import { SonReel } from "./views/SonReel";
 import { QuelleFlute } from "./views/QuelleFlute";
+import { Aide } from "./views/Aide";
 
 const TABS: readonly { id: Tab; label: string }[] = [
   { id: "f1", label: "Son réel" },
@@ -15,10 +16,18 @@ const VERSION: string = import.meta.env.VITE_APP_VERSION ?? "dev";
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState());
+  // Ouverte au premier lancement (helpSeen faux) ; le « ? » de l'en-tête la
+  // rouvre sans toucher à helpSeen, qui ne porte que le premier fermage.
+  const [aideOuverte, setAideOuverte] = useState<boolean>(() => !state.helpSeen);
 
   useEffect(() => {
     saveState(state);
   }, [state]);
+
+  const fermeAide = (): void => {
+    setAideOuverte(false);
+    setState((s) => (s.helpSeen ? s : { ...s, helpSeen: true }));
+  };
 
   return (
     <main className="app">
@@ -28,6 +37,14 @@ export default function App() {
           <h1>Galoubet</h1>
           <p>Transpositions galoubet · tambourin</p>
         </div>
+        <button
+          type="button"
+          className="app-header__aide"
+          onClick={() => setAideOuverte(true)}
+          aria-label="Aide : installer l'application"
+        >
+          ?
+        </button>
       </header>
 
       <div className="tabs" role="group" aria-label="Choix de l’écran">
@@ -70,6 +87,8 @@ export default function App() {
       )}
 
       <footer className="app-footer">v{VERSION}</footer>
+
+      {aideOuverte && <Aide onClose={fermeAide} />}
     </main>
   );
 }

@@ -40,6 +40,7 @@ describe("B) parseState — plage f2", () => {
     );
     expect(r).toEqual({
       tab: "f2",
+      helpSeen: false,
       f1: { writtenPc: 3, flute: "La", noteMidi: 67 },
       f2: { realPc: 7 },
     });
@@ -158,5 +159,42 @@ describe("C) parseState — validation tab / f1 / f2 préservée", () => {
       JSON.stringify({ tab: "f1", f1: { writtenPc: 0, flute: "Ut" }, f2: { realPc: 24 } }),
     );
     expect(r.f2.realPc).toBe(9);
+  });
+});
+
+// D) helpSeen — l'aide d'installation s'est-elle déjà fermée ?
+
+describe("D) parseState — helpSeen", () => {
+  it("première visite (null) → helpSeen false (l'aide s'affiche)", () => {
+    expect(parseState(null).helpSeen).toBe(false);
+  });
+
+  it("payload v1 sans helpSeen → false (rétrocompat, l'aide s'affiche une fois)", () => {
+    const r = parseState(
+      JSON.stringify({ tab: "f2", f1: { writtenPc: 3, flute: "La" }, f2: { realPc: 7 } }),
+    );
+    expect(r.helpSeen).toBe(false);
+    expect(r.tab).toBe("f2");
+  });
+
+  it("helpSeen true conservé (l'aide ne se rouvre pas)", () => {
+    const r = parseState(
+      JSON.stringify({ tab: "f1", helpSeen: true, f1: { writtenPc: 0, flute: "Ut" }, f2: { realPc: 5 } }),
+    );
+    expect(r.helpSeen).toBe(true);
+  });
+
+  it("helpSeen non-booléen ('oui') → false", () => {
+    const r = parseState(
+      JSON.stringify({ tab: "f1", helpSeen: "oui", f1: { writtenPc: 0, flute: "Ut" }, f2: { realPc: 5 } }),
+    );
+    expect(r.helpSeen).toBe(false);
+  });
+
+  it("helpSeen 1 → false (pas de coercition)", () => {
+    const r = parseState(
+      JSON.stringify({ tab: "f1", helpSeen: 1, f1: { writtenPc: 0, flute: "Ut" }, f2: { realPc: 5 } }),
+    );
+    expect(r.helpSeen).toBe(false);
   });
 });
