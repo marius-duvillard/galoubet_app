@@ -5,7 +5,7 @@ méthode et aide à choisir la bonne flûte pour un morceau.
 
 ## Fonctionnalités
 
-Deux onglets.
+Deux onglets, et une aide d'installation qui s'affiche au premier lancement.
 
 - Les puces de tonalité affichent l'armure de la tonalité (ex. « 2♭ »).
 - Le rappel de la transposition (intervalle notée → réelle) figure dans les
@@ -92,7 +92,8 @@ npm install        # dépendances
 npm run dev        # serveur de développement (Vite)
 npm run build      # typecheck + build de production dans dist/
 npm run preview    # servir dist/ en local
-npm test           # 193 tests vitest (moteur + ambitus + service worker)
+npm test           # 203 tests vitest (moteur 92 · portée 51 · ambitus 31
+                   # · stockage 26 · service worker 3)
 npm run typecheck  # vérification TypeScript (tsc --noEmit)
 ```
 
@@ -156,8 +157,8 @@ rsvg-convert -w 180 -h 180 public/icons/icon.svg -o public/apple-touch-icon.png
 ```
 
 Après toute modification, changer la constante `CACHE` dans `public/sw.js`
-(bump de version, par exemple `galoubet-v5`) pour forcer le rafraîchissement
-du cache chez les utilisateurs installés.
+(bump de version, par exemple `galoubet-v8` → `galoubet-v9`) pour forcer le
+rafraîchissement du cache chez les utilisateurs installés.
 
 ## Architecture
 
@@ -166,14 +167,33 @@ du cache chez les utilisateurs installés.
 - `src/ambitus.ts` : module pur de l'ambitus du galoubet (`formatNote`,
   `writtenRange`, `fitsAmbitus`, `pickWithRange`), sans DOM, dépend
   uniquement de `src/transposition.ts`.
+- `src/staff.ts` : géométrie de la portée, pure et sans DOM. Fait la
+  correspondance MIDI ↔ position verticale (`midiToPosition`,
+  `positionToNaturalMidi`, `positionY`), les lignes supplémentaires
+  (`ledgerLinesFor`), les altérations et leur interaction avec l'armure
+  (`keySignatureAccidental`, `midiWithKeySignature`,
+  `accidentalNotation`, `keySignatureOf`) — l'armure tient lieu
+  d'altération — et le layout groupé par groupe de notes (`staffLayout`,
+  `staffGroupLayout`, `StaffGroup`).
 - `src/sw.test.ts` : tests du service worker (harness `node:vm` exécutant le
   vrai `public/sw.js`), y compris le cas sous-chemin GitHub Pages.
-- `src/views/` (SonReel, QuelleFlute) et `src/components/` (grille de
-  tonalités, puces de flûtes, sélecteur d'étendue, badges de confort, cartes
-  de résultat) : interface React 19.
-- `src/storage.ts` : l'état (onglet actif, choix) est conservé dans
+- `src/views/Aide.tsx` : dialogue d'installation (rôle `dialog`, `aria-modal`,
+  Échap et clic sur le fond le ferment). Ouvert au premier lancement, rouvrable
+  par le « ? » de l'en-tête ; il couvre Android (Chrome), iPhone/iPad (Safari)
+  et ordinateur (Chrome), et rappelle qu'une fois installée l'app marche hors
+  connexion.
+- `src/views/` (SonReel, QuelleFlute) et `src/components/` : interface
+  React 19. La portée est rendue en SVG par `Staff.tsx`, `StaffMark.tsx`,
+  `KeyStaff.tsx` et `Signature.tsx` (armure par groupe, dans la couleur du
+  groupe), à partir de la géométrie de `src/staff.ts`. Le reste de
+  l'interface : `KeyChipGrid` (grille de tonalités), `FluteChips` (puces de
+  flûtes), `RangeSelect` (sélecteur d'étendue), `ComfortBadge` (badges de
+  confort), `ResultCard` (cartes de résultat), `FieldSection` et `Chip`
+  (conteneurs).
+- `src/storage.ts` : l'état (onglet actif, choix, `helpSeen`) est conservé dans
   localStorage sous une clé versionnée, avec repli sur les valeurs par
-  défaut. L'étendue du morceau (f2.rangeLow / f2.rangeHigh) et la note
+  défaut. `helpSeen` ne retient que `true` strict : un payload v1 sans la clé
+  remet l'aide en avant au lieu de la faire croire vue. L'étendue du morceau (f2.rangeLow / f2.rangeHigh) et la note
   écrite de la portée (f1.noteMidi) partagent la même clé v1, avec parse
   tolérant (bornes invalides abandonnées ensemble).
 - `public/manifest.webmanifest` + `public/sw.js` : le service worker sert la
