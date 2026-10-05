@@ -1,9 +1,10 @@
 // F2 « Quelle flûte ? » : tonalité réelle → meilleure configuration (galoubet + tonalité notée),
-// avec étendue du morceau optionnelle qui filtre les configurations tenables à l'ambitus.
+// avec étendue du morceau optionnelle qui filtre les configurations tenables à l'ambitus,
+// à l'octave près (badge « octave plus bas / plus haut » quand la lecture ne tient qu'ainsi).
 // Une configuration sélectionnée affiche sa lecture (notes lues) sur la portée.
 
 import { useState } from "react";
-import { formatNote, pickWithRange, writtenRange } from "../ambitus";
+import { formatNote, octaveLabel, pickWithRange } from "../ambitus";
 import type { PickResult, RangeCandidate } from "../ambitus";
 import { bestConfigs, formatKey, intervalLabel } from "../transposition";
 import type { Flute } from "../transposition";
@@ -27,6 +28,13 @@ function rangeLineOf(candidate: RangeCandidate): string {
   return `Lecture : ${formatNote(candidate.writtenLow)} → ${formatNote(candidate.writtenHigh)}`;
 }
 
+function ambitusBadge(candidate: RangeCandidate): string | null {
+  if (!candidate.fitsRange) {
+    return "hors ambitus";
+  }
+  return octaveLabel(candidate.octaveShift) || null;
+}
+
 function sonnerNote(flute: Flute): string {
   return `Sonner ${intervalLabel(flute)}.`;
 }
@@ -38,6 +46,7 @@ interface OptionProps {
 }
 
 function RangeOption({ option, selected, onSelect }: OptionProps) {
+  const badge = ambitusBadge(option);
   return (
     <li className="option">
       <div
@@ -59,7 +68,7 @@ function RangeOption({ option, selected, onSelect }: OptionProps) {
           <p className="option__range">{rangeLineOf(option)}</p>
         </div>
         <ComfortBadge small label={option.label} />
-        {!option.fitsRange && <ComfortBadge small label="hors ambitus" />}
+        {badge !== null && <ComfortBadge small label={badge} />}
       </div>
     </li>
   );
@@ -117,6 +126,7 @@ function RangeResults({
           keyLine={`Noter en ${formatKey(primary.writtenPc)}`}
           rangeLine={rangeLineOf(primary)}
           badgeLabel={primary.label}
+          extraBadge={ambitusBadge(primary) ?? undefined}
           note={sonnerNote(primary.flute)}
           selected={selected === primary.flute}
           onSelect={() => onSelect(primary.flute)}
@@ -131,7 +141,7 @@ function RangeResults({
     return (
       <>
         <p className="notice" role="alert">
-          Aucune configuration ne couvre l'étendue du morceau.
+          Aucune configuration ne couvre l'étendue du morceau, même à l'octave.
         </p>
         <ResultCard
           id="f2-fallback"
@@ -140,7 +150,7 @@ function RangeResults({
           keyLine={`Noter en ${formatKey(first.writtenPc)}`}
           rangeLine={rangeLineOf(first)}
           badgeLabel={first.label}
-          extraBadge="hors ambitus"
+          extraBadge={ambitusBadge(first) ?? "hors ambitus"}
           note={sonnerNote(first.flute)}
           selected={selected === first.flute}
           onSelect={() => onSelect(first.flute)}
@@ -163,7 +173,7 @@ function RangeResults({
           keyLine={`Noter en ${formatKey(fallback.writtenPc)}`}
           rangeLine={rangeLineOf(fallback)}
           badgeLabel={fallback.label}
-          extraBadge={fallback.fitsRange ? undefined : "hors ambitus"}
+          extraBadge={ambitusBadge(fallback) ?? undefined}
           note={sonnerNote(fallback.flute)}
           fallback
           selected={selected === fallback.flute}
@@ -260,12 +270,17 @@ export function QuelleFlute({
         pick.primary?.flute ??
         pick.candidates[0]?.flute ??
         null);
+  const selectedCandidate = pick?.candidates.find((c) => c.flute === selected) ?? null;
   const written: WrittenRange | null =
-    rangeSet && selected !== null
-      ? { ...writtenRange(rangeLow, rangeHigh, selected), flute: selected }
+    rangeSet && selectedCandidate !== null
+      ? {
+          low: selectedCandidate.writtenLow,
+          high: selectedCandidate.writtenHigh,
+          flute: selectedCandidate.flute,
+          octaveShift: selectedCandidate.octaveShift,
+        }
       : null;
-  const writtenSignaturePc =
-    pick?.candidates.find((candidate) => candidate.flute === selected)?.writtenPc ?? null;
+  const writtenSignaturePc = selectedCandidate?.writtenPc ?? null;
 
   return (
     <div className="view">

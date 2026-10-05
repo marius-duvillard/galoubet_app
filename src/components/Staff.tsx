@@ -5,7 +5,8 @@
 
 import { useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
-import { formatNote } from "../ambitus";
+import { formatNote, octaveLabel } from "../ambitus";
+import type { OctaveShift } from "../ambitus";
 import {
   CLEF_PATH,
   CLEF_TRANSFORM,
@@ -25,6 +26,7 @@ export interface WrittenRange {
   low: number;
   high: number;
   flute: string;
+  octaveShift?: OctaveShift;
 }
 
 interface StaffProps {
@@ -178,6 +180,11 @@ export function Staff({
   const viewTop = Math.min(VIEW_Y, writtenTop);
   const viewHeight = VIEW_H + (VIEW_Y - viewTop);
 
+  const writtenOctaveSuffix =
+    written !== null && written.octaveShift
+      ? ` · ${octaveLabel(written.octaveShift)}`
+      : "";
+
   const moveLow = (midi: number): void => {
     if (high === undefined) onChange(midi, undefined);
     else onChange(midi, Math.max(midi, high));
@@ -289,7 +296,7 @@ export function Staff({
           </g>
         )}
         {written !== null && (
-          <g role="img" aria-label={`Notes lues par le galoubet en ${written.flute} : ${formatNote(written.low)} → ${formatNote(written.high)}`}>
+          <g role="img" aria-label={`Notes lues par le galoubet en ${written.flute} : ${formatNote(written.low)} → ${formatNote(written.high)}${writtenOctaveSuffix}`}>
             {writtenSignaturePc !== null && <Signature pc={writtenSignaturePc} at={group2.signatureX} written />}
             <WrittenNote midi={written.low} x={group2.note1X} keyPc={writtenSignaturePc} />
             <WrittenNote midi={written.high} x={group2.note2X!} keyPc={writtenSignaturePc} />
@@ -302,6 +309,7 @@ export function Staff({
           Son réel
           <span className="staff__legend-dot staff__legend-dot--written" aria-hidden="true" />
           Lu — galoubet en {written.flute}
+          {writtenOctaveSuffix}
         </p>
       )}
     </div>

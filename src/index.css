@@ -457,6 +457,13 @@ body {
   color: var(--ink-soft);
 }
 
+/* ── Badge « octave plus bas / plus haut » (indigo, lecture tenable à l'octave) ── */
+
+.badge--octave {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 /* ── Étendue du morceau (F2) ── */
 
 .staff {
