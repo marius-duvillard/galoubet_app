@@ -1,4 +1,4 @@
-const CACHE = "galoubet-v8";
+const CACHE = "galoubet-v9";
 
 // Chemins RELATIFS à l'emplacement du worker : l'app fonctionne à la racine
 // (https://h/) comme sous un sous-chemin (https://h/galoubet_app/, ex. site
